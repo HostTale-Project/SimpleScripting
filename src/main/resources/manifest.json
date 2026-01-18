@@ -1,0 +1,19 @@
+{
+  "Group": "HostTale",
+  "Name": "SimpleScripting",
+  "Version": "1.0.0",
+  "Description": "Create custom plugins using Javascript",
+  "Authors": [
+    {
+      "Name": "InvBoy"
+    }
+  ],
+  "Website": "${website}",
+  "ServerVersion": "*",
+  "Dependencies": {
+    "Hytale:EntityModule": "*"
+  },
+  "OptionalDependencies": {},
+  "DisabledByDefault": false,
+  "Main": "${entry_point}"
+}
