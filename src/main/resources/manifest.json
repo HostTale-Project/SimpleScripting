@@ -1,7 +1,7 @@
 {
   "Group": "HostTale",
   "Name": "SimpleScripting",
-  "Version": "1.0.0",
+  "Version": "1.0.1",
   "Description": "Create custom plugins using Javascript",
   "Authors": [
     {
