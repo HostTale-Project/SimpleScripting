@@ -10,11 +10,14 @@ import com.hosttale.simplescripting.util.*;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.math.vector.Transform;
 import com.hypixel.hytale.math.vector.Vector3d;
+import com.hypixel.hytale.server.core.Constants;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.universe.Universe;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
+
+import java.nio.file.Path;
 
 /**
  * Builds and configures JavaScript execution contexts.
@@ -123,6 +126,16 @@ public class JavaScriptContextBuilder {
         if (eventManager != null) {
             eventManager.clear();
         }
+    }
+    
+    /**
+     * Gets the mods directory path.
+     * @return Path to the mods directory
+     */
+    public Path getModsPath() {
+        return Constants.UNIVERSE_PATH
+                .resolve("SimpleScripting")
+                .resolve("mods");
     }
 
     /**

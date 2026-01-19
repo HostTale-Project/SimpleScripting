@@ -211,6 +211,35 @@ public class ScriptLoader {
     }
     
     /**
+     * Reloads a single script by its relative path.
+     * @param scriptPath The relative path from mods directory (e.g., "admin.js" or "lib/config.js")
+     */
+    public void reloadScript(String scriptPath) {
+        Path fullPath = directoryManager.getModsPath().resolve(scriptPath);
+        
+        if (!Files.exists(fullPath)) {
+            throw new IllegalArgumentException("Script not found: " + scriptPath);
+        }
+        
+        // Unregister the specific script
+        scriptRegistry.unregisterScript(scriptPath);
+        
+        // Enter context for this thread
+        Context context = Context.enter();
+        try {
+            // Re-execute the script with the current scope
+            if (currentScope != null) {
+                executeScript(fullPath, context, currentScope);
+                logger.atInfo().log("Reloaded script: " + scriptPath);
+            } else {
+                throw new IllegalStateException("JavaScript scope not initialized");
+            }
+        } finally {
+            Context.exit();
+        }
+    }
+    
+    /**
      * Gets the number of loaded scripts.
      * @return Script count
      */

@@ -24,7 +24,7 @@ dependencies {
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     implementation("org.mozilla:rhino:1.9.0")
-    implementation(files("/Users/federicoleiva/Library/Application Support/Hytale/install/pre-release/package/game/$game_build/Server/HytaleServer.jar"))
+    implementation(files("/Users/federicoleiva/hytale/HytaleServer.jar"))
 }
 
 test {
@@ -44,12 +44,12 @@ jar {
 processResources {
     var expandProps = [
         'name'          : project.name,
-    'version'       : project.version,
-    'group'         : project.group,
-    'description'   : mod_description,
-    'website'       : website,
-    'server_version': server_version,
-    'entry_point'   : entry_point
+        'version'       : project.version,
+        'group'         : project.group,
+        'description'   : mod_description,
+        'website'       : website,
+        'server_version': server_version,
+        'entry_point'   : entry_point
     ]
 
     filesMatching(['manifest.json']) {

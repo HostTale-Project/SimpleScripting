@@ -1,0 +1,28 @@
+$Common = "../Common.ui";
+
+Group {
+    LayoutMode: Center;
+    
+    Group #MainPanel {
+        Anchor: (Width: 600, Height: 500);
+        LayoutMode: Top;
+        
+        Label #Title {
+            Style: (FontSize: 24, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #b4c8c9);
+            Text: "Scripts Manager";
+            Anchor: (Height: 60);
+            Padding: (Full: 15);
+        }
+        
+        Group #ScriptsList {
+            Anchor: (Width: 560, Top: 10);
+            LayoutMode: Top;
+            Padding: (Left: 20, Right: 20);
+        }
+        
+        Group #ActionButtons {
+            Anchor: (Height: 60, Bottom: 10);
+            LayoutMode: Center;
+        }
+    }
+}

@@ -1,5 +1,6 @@
 package com.hosttale.simplescripting;
 
+import com.hosttale.simplescripting.commands.ScriptsCommand;
 import com.hosttale.simplescripting.managers.EventManager;
 import com.hosttale.simplescripting.managers.ModsDirectoryManager;
 import com.hosttale.simplescripting.managers.ScriptRegistry;
@@ -73,6 +74,9 @@ public class SimpleScriptingPlugin extends JavaPlugin {
                 eventManager.startEventPolling(scheduler);
                 getLogger().atInfo().log("Started event polling system");
             }
+            
+            // Register the /scripts command for UI access
+            ScriptsCommand.register();
 
         } catch (IOException e) {
             getLogger().atSevere().log("Error loading scripts: " + e.getMessage());
