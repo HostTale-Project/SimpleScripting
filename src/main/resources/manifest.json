@@ -1,20 +1,22 @@
 {
-  "Group": "HostTale",
-  "Name": "SimpleScripting",
-  "Version": "1.0.1",
-  "Description": "Create custom plugins using Javascript",
-  "Authors": [
-    {
-      "Name": "InvBoy"
-    }
-  ],
-  "Website": "${website}",
-  "ServerVersion": "*",
-  "Dependencies": {
-    "Hytale:EntityModule": "*"
-  },
-  "OptionalDependencies": {},
-  "DisabledByDefault": false,
-  "Main": "${entry_point}",
-  "IncludesAssetPack": true
+    "Group": "HostTale",
+    "Name": "SimpleScripting",
+    "Version": "2.0.0",
+    "Description": "Create mods using Javascript!",
+    "Authors": [
+        {
+            "Name": "Federico J. Leiva"
+        }
+    ],
+    "Website": "wiki.hosttale.com",
+    "ServerVersion": "*",
+    "Dependencies": {
+        
+    },
+    "OptionalDependencies": {
+        
+    },
+    "DisabledByDefault": false,
+    "Main": "com.hosttale.simplescripting.SimpleScriptingPlugin",
+    "IncludesAssetPack": true
 }
