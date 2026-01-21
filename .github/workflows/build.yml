@@ -60,6 +60,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: Release
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
     
     steps:
     - name: Checkout Repository
