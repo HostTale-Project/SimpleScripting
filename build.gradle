@@ -5,32 +5,38 @@ plugins {
 
 import org.gradle.internal.os.OperatingSystem
 
+def isCI = System.getenv('CI') == 'true'
+
 ext {
-    if (project.hasProperty('hytale_home')) {
-        hytaleHome = project.findProperty('hytale_home')
-    }
-    else {
-        def os = OperatingSystem.current()
-        if (os.isWindows()) {
-            hytaleHome = "${System.getProperty("user.home")}/AppData/Roaming/Hytale"
+    if (!isCI) {
+        if (project.hasProperty('hytale_home')) {
+            hytaleHome = project.findProperty('hytale_home')
         }
-        else if (os.isMacOsX()) {
-            hytaleHome = "${System.getProperty("user.home")}/Library/Application Support/Hytale"
-        }
-        else if (os.isLinux()) {
-            hytaleHome = "${System.getProperty("user.home")}/.var/app/com.hypixel.HytaleLauncher/data/Hytale"
-            if (!file(hytaleHome).exists()) {
-                hytaleHome = "${System.getProperty("user.home")}/.local/share/Hytale"
+        else {
+            def os = OperatingSystem.current()
+            if (os.isWindows()) {
+                hytaleHome = "${System.getProperty("user.home")}/AppData/Roaming/Hytale"
+            }
+            else if (os.isMacOsX()) {
+                hytaleHome = "${System.getProperty("user.home")}/Library/Application Support/Hytale"
+            }
+            else if (os.isLinux()) {
+                hytaleHome = "${System.getProperty("user.home")}/.var/app/com.hypixel.HytaleLauncher/data/Hytale"
+                if (!file(hytaleHome).exists()) {
+                    hytaleHome = "${System.getProperty("user.home")}/.local/share/Hytale"
+                }
             }
         }
     }
 }
 
-if (!project.hasProperty('hytaleHome')) {
-    throw new GradleException('Your Hytale install could not be detected automatically. If you are on an unsupported platform or using a custom install location, please define the install location using the hytale_home property.');
-}
-else if (!file(project.findProperty('hytaleHome')).exists()) {
-    throw new GradleException("Failed to find Hytale at the expected location. Please make sure you have installed the game. The expected location can be changed using the hytale_home property. Currently looking in ${project.findProperty('hytaleHome')}")
+if (!isCI) {
+    if (!project.hasProperty('hytaleHome')) {
+        throw new GradleException('Your Hytale install could not be detected automatically. If you are on an unsupported platform or using a custom install location, please define the install location using the hytale_home property.');
+    }
+    else if (!file(project.findProperty('hytaleHome')).exists()) {
+        throw new GradleException("Failed to find Hytale at the expected location. Please make sure you have installed the game. The expected location can be changed using the hytale_home property. Currently looking in ${project.findProperty('hytaleHome')}")
+    }
 }
 
 def envFile = file(".env")
@@ -72,9 +78,11 @@ dependencies {
 }
 
 // Create the working directory to run the server if it does not already exist.
-def serverRunDir = file("$projectDir/run")
-if (!serverRunDir.exists()) {
-    serverRunDir.mkdirs()
+if (!isCI) {
+    def serverRunDir = file("$projectDir/run")
+    if (!serverRunDir.exists()) {
+        serverRunDir.mkdirs()
+    }
 }
 
 // Updates the manifest.json file with the latest properties defined in the
@@ -115,12 +123,15 @@ def createServerRunArguments(String srcDir) {
 
 // Creates a run configuration in IDEA that will run the Hytale server with
 // your plugin and the default assets.
-idea.project.settings.runConfigurations {
-    'HytaleServer'(org.jetbrains.gradle.ext.Application) {
-        mainClass = 'com.hypixel.hytale.Main'
-        moduleName = project.idea.module.name + '.main'
-        programParameters = createServerRunArguments(sourceSets.main.java.srcDirs.first().parentFile.absolutePath)
-        workingDirectory = serverRunDir.absolutePath
+if (!isCI) {
+    def serverRunDir = file("$projectDir/run")
+    idea.project.settings.runConfigurations {
+        'HytaleServer'(org.jetbrains.gradle.ext.Application) {
+            mainClass = 'com.hypixel.hytale.Main'
+            moduleName = project.idea.module.name + '.main'
+            programParameters = createServerRunArguments(sourceSets.main.java.srcDirs.first().parentFile.absolutePath)
+            workingDirectory = serverRunDir.absolutePath
+        }
     }
 }
 
