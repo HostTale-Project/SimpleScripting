@@ -57,6 +57,7 @@ repositories {
             password = System.getProperty("REPSY_PASS")
         }
     }
+    mavenCentral()
 }
 
 java {
@@ -75,6 +76,8 @@ javadoc {
 // the official launcher for now.
 dependencies {
     implementation("com.hypixel.hytale:hytale-server:1.0.2")
+    implementation("org.mozilla:rhino:1.7.15")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.1")
 }
 
 // Create the working directory to run the server if it does not already exist.

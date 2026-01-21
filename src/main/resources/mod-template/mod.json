@@ -1,0 +1,11 @@
+{
+  "id": "__MOD_ID__",
+  "name": "__MOD_NAME__",
+  "version": "1.0.0",
+  "entrypoint": "main.js",
+  "preload": false,
+  "dependencies": [],
+  "requiredAssetPacks": [],
+  "permissions": [],
+  "description": "Describe your mod."
+}

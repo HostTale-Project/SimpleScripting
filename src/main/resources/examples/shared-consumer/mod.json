@@ -1,0 +1,10 @@
+{
+  "id": "shared-consumer",
+  "name": "Shared Service Consumer",
+  "version": "1.0.0",
+  "entrypoint": "main.js",
+  "requiredAssetPacks": [],
+  "permissions": [],
+  "description": "Calls a service exposed by shared-provider via SharedServices.",
+  "dependencies": ["shared-provider"]
+}
