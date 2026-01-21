@@ -36,7 +36,7 @@ jobs:
         echo "REPSY_PASS=${{ secrets.REPSY_PASS }}" >> .env
     
     - name: Build with Gradle
-      run: ./gradlew shadowJar
+      run: ./gradlew jar
       env:
         REPSY_USER: ${{ secrets.REPSY_USER }}
         REPSY_PASS: ${{ secrets.REPSY_PASS }}
