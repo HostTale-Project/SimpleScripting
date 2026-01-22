@@ -78,6 +78,10 @@ dependencies {
     implementation("com.hypixel.hytale:hytale-server:1.0.2")
     implementation("org.mozilla:rhino:1.7.15")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+    testImplementation("org.mockito:mockito-core:5.2.0")
+    testImplementation("org.mockito:mockito-inline:5.2.0")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.2")
 }
 
 // Create the working directory to run the server if it does not already exist.
@@ -107,6 +111,14 @@ tasks.register('updatePluginManifest') {
 // Makes sure the plugin manifest is up to date.
 tasks.named('processResources') {
     dependsOn 'updatePluginManifest'
+}
+
+test {
+    useJUnitPlatform()
+    jvmArgs += [
+            "-Djava.util.logging.manager=com.hypixel.hytale.logger.backend.HytaleLogManager",
+            "-Dnet.bytebuddy.experimental=true"
+    ]
 }
 
 def createServerRunArguments(String srcDir) {

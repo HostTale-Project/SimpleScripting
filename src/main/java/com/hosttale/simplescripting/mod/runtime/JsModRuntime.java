@@ -39,22 +39,32 @@ public final class JsModRuntime implements AutoCloseable {
             return;
         }
 
-        context = Context.enter();
-        context.setLanguageVersion(Context.VERSION_ES6);
-        scope = context.initSafeStandardObjects();
-        injectGlobals();
-
         Path entrypoint = definition.getEntrypoint();
-        try (Reader reader = new InputStreamReader(Files.newInputStream(entrypoint), StandardCharsets.UTF_8)) {
-            context.evaluateReader(scope, reader, entrypoint.getFileName().toString(), 1, null);
+        boolean success = false;
+        context = Context.enter();
+        try {
+            context.setLanguageVersion(Context.VERSION_ES6);
+            scope = context.initSafeStandardObjects();
+            injectGlobals();
+
+            try (Reader reader = new InputStreamReader(Files.newInputStream(entrypoint), StandardCharsets.UTF_8)) {
+                context.evaluateReader(scope, reader, entrypoint.getFileName().toString(), 1, null);
+            }
+
+            onEnable = extractHook("onEnable");
+            onDisable = extractHook("onDisable");
+            onReload = extractHook("onReload");
+            loaded = true;
+            success = true;
+        } catch (Exception e) {
+            logger.atSevere().log("Failed to load mod %s: %s", definition.getManifest().getId(), e.getMessage());
+            throw toIOException(e, "Failed to evaluate entrypoint " + entrypoint);
         } finally {
             Context.exit();
+            if (!success) {
+                cleanupState();
+            }
         }
-
-        onEnable = extractHook("onEnable");
-        onDisable = extractHook("onDisable");
-        onReload = extractHook("onReload");
-        loaded = true;
     }
 
     private void injectGlobals() {
@@ -80,12 +90,7 @@ public final class JsModRuntime implements AutoCloseable {
             throw new IllegalStateException("Mod runtime must be loaded before enable.");
         }
         if (onEnable != null) {
-            Context cx = Context.enter(context);
-            try {
-                onEnable.call(cx, scope, scope, new Object[]{});
-            } finally {
-                Context.exit();
-            }
+            invokeHook(onEnable, "onEnable");
         }
     }
 
@@ -94,24 +99,14 @@ public final class JsModRuntime implements AutoCloseable {
             return;
         }
         if (onDisable != null) {
-            Context cx = Context.enter(context);
-            try {
-                onDisable.call(cx, scope, scope, new Object[]{});
-            } finally {
-                Context.exit();
-            }
+            invokeHook(onDisable, "onDisable");
         }
         close();
     }
 
     public void reload() throws IOException {
         if (onReload != null) {
-            Context cx = Context.enter(context);
-            try {
-                onReload.call(cx, scope, scope, new Object[]{});
-            } finally {
-                Context.exit();
-            }
+            invokeHook(onReload, "onReload");
         }
         close();
         loaded = false;
@@ -157,6 +152,33 @@ public final class JsModRuntime implements AutoCloseable {
         } finally {
             Context.exit();
         }
+    }
+
+    private void invokeHook(Function hook, String hookName) {
+        Context cx = Context.enter(context);
+        try {
+            hook.call(cx, scope, scope, Context.emptyArgs);
+        } catch (Exception e) {
+            logger.atSevere().log("Error during %s for mod %s: %s", hookName, definition.getManifest().getId(), e.getMessage());
+        } finally {
+            Context.exit();
+        }
+    }
+
+    private void cleanupState() {
+        onEnable = null;
+        onDisable = null;
+        onReload = null;
+        scope = null;
+        context = null;
+        loaded = false;
+    }
+
+    private IOException toIOException(Exception e, String message) {
+        if (e instanceof IOException ioException) {
+            return ioException;
+        }
+        return new IOException(message, e);
     }
 
     public static final class LoggerBridge {
