@@ -1,0 +1,10 @@
+{
+  "id": "shared-provider",
+  "name": "Shared Service Provider",
+  "version": "1.0.0",
+  "entrypoint": "main.js",
+  "requiredAssetPacks": [],
+  "permissions": [],
+  "description": "Exposes a greeting service to other mods via SharedServices.",
+  "preload": true
+}

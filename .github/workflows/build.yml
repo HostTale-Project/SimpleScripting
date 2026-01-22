@@ -2,7 +2,9 @@ name: Build Plugin
 
 on:
   push:
-    branches: [ main, develop, 'release/*' ]
+    branches: [ main, develop, 'release/*', 'snapshot/*' ]
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -58,6 +60,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: Release
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
     
     steps:
     - name: Checkout Repository
@@ -87,5 +91,6 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: build/libs/*.jar
+        prerelease: ${{ contains(github.ref_name, 'SNAPSHOT') }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
