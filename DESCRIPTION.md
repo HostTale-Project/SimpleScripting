@@ -130,6 +130,10 @@ Essential administration commands.
 - `/playerinfo <player>` - View player details
 - `/players` - List online players
 
+### Auto-Stop System (`auto-stop.js`)
+Automatically stops the server every hour, before activating this script, please add a bash script to auto-start the server and uncomment lines between 10 and 22.
+
+
 ---
 
 ## Configuration
