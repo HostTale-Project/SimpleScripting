@@ -1,8 +1,13 @@
 package com.hosttale.simplescripting.mod;
 
 import com.hosttale.simplescripting.mod.model.JsModManifest;
+import com.hypixel.hytale.event.EventRegistry;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.command.system.CommandRegistry;
+import com.hypixel.hytale.server.core.plugin.registry.AssetRegistry;
+import com.hypixel.hytale.server.core.task.TaskRegistry;
 import com.hosttale.simplescripting.mod.runtime.JsModRuntime;
+import com.hosttale.simplescripting.mod.runtime.JsPluginServices;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -15,6 +20,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 class JsModInstanceTest {
 
@@ -33,7 +39,7 @@ class JsModInstanceTest {
     @Test
     void loadAndEnableMarksEnabled() throws Exception {
         JsModDefinition definition = definitionWithScript(safeLifecycleScript());
-        JsModRuntime runtime = new com.hosttale.simplescripting.mod.runtime.JsModRuntime(definition, logger, registry);
+        JsModRuntime runtime = new com.hosttale.simplescripting.mod.runtime.JsModRuntime(definition, logger, registry, pluginServices());
         JsModInstance instance = new JsModInstance(definition, runtime, logger, registry);
 
         instance.loadAndEnable();
@@ -47,7 +53,7 @@ class JsModInstanceTest {
     @Test
     void disableRemovesServicesAndMarksDisabled() throws Exception {
         JsModDefinition definition = definitionWithScript(safeLifecycleScript());
-        JsModRuntime runtime = new com.hosttale.simplescripting.mod.runtime.JsModRuntime(definition, logger, registry);
+        JsModRuntime runtime = new com.hosttale.simplescripting.mod.runtime.JsModRuntime(definition, logger, registry, pluginServices());
         JsModInstance instance = new JsModInstance(definition, runtime, logger, registry);
         instance.loadAndEnable();
         org.mozilla.javascript.Scriptable api = org.mockito.Mockito.mock(org.mozilla.javascript.Scriptable.class);
@@ -65,7 +71,7 @@ class JsModInstanceTest {
     @Test
     void reloadReenablesRuntime() throws Exception {
         JsModDefinition definition = definitionWithScript(safeLifecycleScript());
-        JsModRuntime runtime = new com.hosttale.simplescripting.mod.runtime.JsModRuntime(definition, logger, registry);
+        JsModRuntime runtime = new com.hosttale.simplescripting.mod.runtime.JsModRuntime(definition, logger, registry, pluginServices());
         JsModInstance instance = new JsModInstance(definition, runtime, logger, registry);
         instance.loadAndEnable();
 
@@ -100,5 +106,15 @@ class JsModInstanceTest {
                 function onDisable() {}
                 function onReload() {}
                 """;
+    }
+
+    private JsPluginServices pluginServices() {
+        return JsPluginServices.of(
+                mock(CommandRegistry.class),
+                mock(EventRegistry.class),
+                mock(TaskRegistry.class),
+                mock(AssetRegistry.class),
+                logger
+        );
     }
 }

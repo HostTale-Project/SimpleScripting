@@ -1,63 +1,36 @@
 plugins {
     id 'java'
     id 'org.jetbrains.gradle.plugin.idea-ext' version '1.3'
+    id 'com.gradleup.shadow' version '9.3.1'
 }
 
 import org.gradle.internal.os.OperatingSystem
 
-def isCI = System.getenv('CI') == 'true'
-
 ext {
-    if (!isCI) {
-        if (project.hasProperty('hytale_home')) {
-            hytaleHome = project.findProperty('hytale_home')
+    if (project.hasProperty('hytale_home')) {
+        hytaleHome = project.findProperty('hytale_home')
+    }
+    else {
+        def os = OperatingSystem.current()
+        if (os.isWindows()) {
+            hytaleHome = "${System.getProperty("user.home")}/AppData/Roaming/Hytale"
         }
-        else {
-            def os = OperatingSystem.current()
-            if (os.isWindows()) {
-                hytaleHome = "${System.getProperty("user.home")}/AppData/Roaming/Hytale"
-            }
-            else if (os.isMacOsX()) {
-                hytaleHome = "${System.getProperty("user.home")}/Library/Application Support/Hytale"
-            }
-            else if (os.isLinux()) {
-                hytaleHome = "${System.getProperty("user.home")}/.var/app/com.hypixel.HytaleLauncher/data/Hytale"
-                if (!file(hytaleHome).exists()) {
-                    hytaleHome = "${System.getProperty("user.home")}/.local/share/Hytale"
-                }
+        else if (os.isMacOsX()) {
+            hytaleHome = "${System.getProperty("user.home")}/Library/Application Support/Hytale"
+        }
+        else if (os.isLinux()) {
+            hytaleHome = "${System.getProperty("user.home")}/.var/app/com.hypixel.HytaleLauncher/data/Hytale"
+            if (!file(hytaleHome).exists()) {
+                hytaleHome = "${System.getProperty("user.home")}/.local/share/Hytale"
             }
         }
     }
 }
 
-if (!isCI) {
-    if (!project.hasProperty('hytaleHome')) {
-        throw new GradleException('Your Hytale install could not be detected automatically. If you are on an unsupported platform or using a custom install location, please define the install location using the hytale_home property.');
-    }
-    else if (!file(project.findProperty('hytaleHome')).exists()) {
-        throw new GradleException("Failed to find Hytale at the expected location. Please make sure you have installed the game. The expected location can be changed using the hytale_home property. Currently looking in ${project.findProperty('hytaleHome')}")
-    }
-}
-
-def envFile = file(".env")
-if (envFile.exists()) {
-    envFile.eachLine { line ->
-        if (!line.startsWith("#") && line.contains("=")) {
-            def (k, v) = line.split("=", 2)
-            System.setProperty(k.trim(), v.trim())
-        }
-    }
-}
-
-repositories {
-    maven {
-        url = uri("https://repo.repsy.io/invboy/maven/")
-        credentials {
-            username = System.getProperty("REPSY_USER")
-            password = System.getProperty("REPSY_PASS")
-        }
-    }
-    mavenCentral()
+def hytaleHomePath = project.findProperty('hytaleHome')
+def hasHytaleHome = hytaleHomePath && file(hytaleHomePath).exists()
+if (!hasHytaleHome) {
+    logger.lifecycle("Hytale install not detected; run configs that launch the server will be skipped. Set -Phytale_home=/path/to/Hytale to enable them.")
 }
 
 java {
@@ -72,23 +45,35 @@ javadoc {
 }
 
 // Adds the Hytale server as a build dependency, allowing you to reference and
-// compile against their code. This requires you to have Hytale installed using
-// the official launcher for now.
+// compile against their code without bundling it. When a local install is
+// present, we still use its jar for launching the server in IDE run configs.
 dependencies {
-    implementation("com.hypixel.hytale:hytale-server:1.0.2")
+    compileOnly("com.hypixel.hytale:Server:$hytale_build")
+    if (hasHytaleHome) {
+        runtimeOnly(files("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar"))
+    }
+    testImplementation("com.hypixel.hytale:Server:$hytale_build")
     implementation("org.mozilla:rhino:1.7.15")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.1")
+    implementation("org.xerial:sqlite-jdbc:3.46.0.0")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testImplementation("org.mockito:mockito-core:5.2.0")
     testImplementation("org.mockito:mockito-inline:5.2.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.2")
 }
 
-// Create the working directory to run the server if it does not already exist.
-if (!isCI) {
-    def serverRunDir = file("$projectDir/run")
-    if (!serverRunDir.exists()) {
-        serverRunDir.mkdirs()
+repositories {
+    mavenCentral()
+    maven {
+        name = "hytale-release"
+        url = uri("https://maven.hytale.com/release")
+    }
+    maven {
+        name = "hytale-pre-release"
+        url = uri("https://maven.hytale.com/pre-release")
+    }
+    maven {
+        url 'https://jitpack.io'
     }
 }
 
@@ -113,6 +98,16 @@ tasks.named('processResources') {
     dependsOn 'updatePluginManifest'
 }
 
+tasks.named('shadowJar') {
+    archiveClassifier.set('')
+    mergeServiceFiles()
+}
+
+// Ensure the shaded jar is produced during a normal build.
+tasks.named('build') {
+    dependsOn 'shadowJar'
+}
+
 test {
     useJUnitPlatform()
     jvmArgs += [
@@ -121,25 +116,30 @@ test {
     ]
 }
 
-def createServerRunArguments(String srcDir) {
-    def programParameters = '--allow-op --disable-sentry --assets="' + "${hytaleHome}/install/$patchline/package/game/latest/Assets.zip" + '"'
-    def modPaths = []
-    if (includes_pack.toBoolean()) {
-        modPaths << srcDir
-    }
-    if (load_user_mods.toBoolean()) {
-        modPaths << "${hytaleHome}/UserData/Mods"
-    }
-    if (!modPaths.isEmpty()) {
-        programParameters += ' --mods="' + modPaths.join(',') + '"'
-    }
-    return programParameters
-}
-
-// Creates a run configuration in IDEA that will run the Hytale server with
-// your plugin and the default assets.
-if (!isCI) {
+if (hasHytaleHome) {
+    // Create the working directory to run the server if it does not already exist.
     def serverRunDir = file("$projectDir/run")
+    if (!serverRunDir.exists()) {
+        serverRunDir.mkdirs()
+    }
+
+    def createServerRunArguments = { String srcDir ->
+        def programParameters = '--allow-op --disable-sentry --assets="' + "${hytaleHome}/install/$patchline/package/game/latest/Assets.zip" + '"'
+        def modPaths = []
+        if (includes_pack.toBoolean()) {
+            modPaths << srcDir
+        }
+        if (load_user_mods.toBoolean()) {
+            modPaths << "${hytaleHome}/UserData/Mods"
+        }
+        if (!modPaths.isEmpty()) {
+            programParameters += ' --mods="' + modPaths.join(',') + '"'
+        }
+        return programParameters
+    }
+
+    // Creates a run configuration in IDEA that will run the Hytale server with
+    // your plugin and the default assets.
     idea.project.settings.runConfigurations {
         'HytaleServer'(org.jetbrains.gradle.ext.Application) {
             mainClass = 'com.hypixel.hytale.Main'
@@ -148,30 +148,36 @@ if (!isCI) {
             workingDirectory = serverRunDir.absolutePath
         }
     }
-}
 
-// Creates a launch.json file for VSCode with the same configuration
-tasks.register('generateVSCodeLaunch') {
-    def vscodeDir = file("$projectDir/.vscode")
-    def launchFile = file("$vscodeDir/launch.json")
-    doLast {
-        if (!vscodeDir.exists()) {
-            vscodeDir.mkdirs()
-        }
-        def programParams = createServerRunArguments("\${workspaceFolder}")
-        def launchConfig = [
-            version: "0.2.0",
-            configurations: [
-                [
-                    type: "java",
-                    name: "HytaleServer",
-                    request: "launch",
-                    mainClass: "com.hypixel.hytale.Main",
-                    args: programParams,
-                    cwd: "\${workspaceFolder}/run"
-                ]
+    // Creates a launch.json file for VSCode with the same configuration
+    tasks.register('generateVSCodeLaunch') {
+        def vscodeDir = file("$projectDir/.vscode")
+        def launchFile = file("$vscodeDir/launch.json")
+        doLast {
+            if (!vscodeDir.exists()) {
+                vscodeDir.mkdirs()
+            }
+            def programParams = createServerRunArguments("\${workspaceFolder}")
+            def launchConfig = [
+                    version: "0.2.0",
+                    configurations: [
+                            [
+                                    type: "java",
+                                    name: "HytaleServer",
+                                    request: "launch",
+                                    mainClass: "com.hypixel.hytale.Main",
+                                    args: programParams,
+                                    cwd: "\${workspaceFolder}/run"
+                            ]
+                    ]
             ]
-        ]
-        launchFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(launchConfig))
+            launchFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(launchConfig))
+        }
+    }
+} else {
+    tasks.register('generateVSCodeLaunch') {
+        doLast {
+            logger.lifecycle("Skipped VSCode launch configuration because hytale_home is not set or the install path is missing.")
+        }
     }
 }

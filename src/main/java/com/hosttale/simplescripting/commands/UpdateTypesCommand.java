@@ -15,6 +15,7 @@ public final class UpdateTypesCommand extends CommandBase {
         super("updatetypes", "Refresh index.d.ts for a mod.");
         this.templateService = templateService;
         this.nameArg = withRequiredArg("mod-name", "Target mod identifier", ArgTypes.STRING);
+        requirePermission("simplescripting.commands.updatetypes");
     }
 
     @Override
