@@ -1,0 +1,19 @@
+Group {
+    LayoutMode: Center;
+    Anchor: (Height: 50);
+
+    Button #ReloadAllBtn {
+        Anchor: (Width: 200, Height: 40);
+        Style: (
+            Default: (Background: #2a5a3a),
+            Hovered: (Background: #3a7a4a),
+            Pressed: (Background: #1a4a2a)
+        );
+
+        Label {
+            Style: (FontSize: 16, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #bfcdd5);
+            Text: "Reload All Scripts";
+            Anchor: (Full: 0);
+        }
+    }
+}

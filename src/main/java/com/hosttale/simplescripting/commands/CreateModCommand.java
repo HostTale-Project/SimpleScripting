@@ -15,6 +15,7 @@ public final class CreateModCommand extends CommandBase {
         super("createmod", "Create a JS mod from the template.");
         this.templateService = templateService;
         this.nameArg = withRequiredArg("mod-name", "Mod identifier (lowercase, digits, -, _)", ArgTypes.STRING);
+        requirePermission("simplescripting.commands.createmod");
     }
 
     @Override

@@ -3,7 +3,12 @@ package com.hosttale.simplescripting.mod.runtime;
 import com.hosttale.simplescripting.mod.JsModDefinition;
 import com.hosttale.simplescripting.mod.SharedServiceRegistry;
 import com.hosttale.simplescripting.mod.model.JsModManifest;
+import com.hosttale.simplescripting.mod.runtime.JsPluginServices;
+import com.hypixel.hytale.event.EventRegistry;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.command.system.CommandRegistry;
+import com.hypixel.hytale.server.core.plugin.registry.AssetRegistry;
+import com.hypixel.hytale.server.core.task.TaskRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -18,6 +23,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 class JsModRuntimeTest {
 
@@ -106,6 +112,13 @@ class JsModRuntimeTest {
         );
 
         JsModDefinition definition = new JsModDefinition(modRoot, manifest);
-        return new JsModRuntime(definition, logger, new SharedServiceRegistry());
+        JsPluginServices services = JsPluginServices.of(
+                mock(CommandRegistry.class),
+                mock(EventRegistry.class),
+                mock(TaskRegistry.class),
+                mock(AssetRegistry.class),
+                logger
+        );
+        return new JsModRuntime(definition, logger, new SharedServiceRegistry(), services);
     }
 }
