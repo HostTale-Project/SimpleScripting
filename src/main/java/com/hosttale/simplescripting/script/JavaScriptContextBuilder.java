@@ -27,7 +27,7 @@ public class JavaScriptContextBuilder {
     private final JavaPlugin plugin;
     private final HytaleLogger logger;
     private final ScriptRegistry scriptRegistry;
-    
+
     // Shared instances for hot reload support
     private CommandManager commandManager;
     private EventManager eventManager;
@@ -50,12 +50,12 @@ public class JavaScriptContextBuilder {
 
         // Create Logger instance
         loggerInstance = new Logger(logger);
-        
+
         // Create core API instances
         commandManager = new CommandManager((SimpleScriptingPlugin) plugin, scope, loggerInstance, scriptRegistry);
         eventManager = new EventManager((SimpleScriptingPlugin) plugin, scope, loggerInstance);
         scheduler = new Scheduler(scope, loggerInstance);
-        
+
         // Create helper instances
         TeleportHelper teleportHelper = new TeleportHelper(loggerInstance);
         PlayerHelper playerHelper = new PlayerHelper(loggerInstance);
@@ -64,7 +64,8 @@ public class JavaScriptContextBuilder {
         worldHelper.setScope(scope); // Enable JavaScript callback execution
         PermissionHelper permissionHelper = new PermissionHelper(loggerInstance);
         PluginHelper pluginHelper = new PluginHelper((SimpleScriptingPlugin) plugin, loggerInstance);
-        
+        CommandExecutorHelper commandExecutorHelper = new CommandExecutorHelper(loggerInstance);
+
         // Set up script registry with managers for cleanup
         scriptRegistry.setManagers(commandManager, eventManager, scheduler);
 
@@ -75,7 +76,7 @@ public class JavaScriptContextBuilder {
         exposeApi(scope, "Commands", commandManager);
         exposeApi(scope, "MessageHelper", new MessageHelper());
         exposeApi(scope, "DB", new DatabaseHelper());
-        
+
         // Expose new helper APIs
         exposeApi(scope, "Teleport", teleportHelper);
         exposeApi(scope, "Players", playerHelper);
@@ -84,14 +85,15 @@ public class JavaScriptContextBuilder {
         exposeApi(scope, "Permissions", permissionHelper);
         exposeApi(scope, "Events", eventManager);
         exposeApi(scope, "Colors", Colors.COLOR_MAP);
-        
+        exposeApi(scope, "CommandExecutor", commandExecutorHelper);
+
         // Expose utility classes
         exposeApi(scope, "Transform", Transform.class);
         exposeApi(scope, "Vector3d", Vector3d.class);
 
         return scope;
     }
-    
+
     /**
      * Gets the event manager for system registration.
      * @return The EventManager instance
@@ -99,7 +101,7 @@ public class JavaScriptContextBuilder {
     public EventManager getEventManager() {
         return eventManager;
     }
-    
+
     /**
      * Gets the scheduler for shutdown.
      * @return The Scheduler instance
@@ -107,7 +109,7 @@ public class JavaScriptContextBuilder {
     public Scheduler getScheduler() {
         return scheduler;
     }
-    
+
     /**
      * Gets the command manager.
      * @return The CommandManager instance
@@ -115,7 +117,7 @@ public class JavaScriptContextBuilder {
     public CommandManager getCommandManager() {
         return commandManager;
     }
-    
+
     /**
      * Shuts down all managed resources.
      */
@@ -127,7 +129,7 @@ public class JavaScriptContextBuilder {
             eventManager.clear();
         }
     }
-    
+
     /**
      * Gets the mods directory path.
      * @return Path to the mods directory

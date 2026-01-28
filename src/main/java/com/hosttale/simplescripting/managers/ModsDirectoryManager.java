@@ -127,7 +127,8 @@ public class ModsDirectoryManager {
             "back.js",
             "rtp.js",
             "ranks.js",
-            "admin.js"
+            "admin.js",
+            "auto-stop.js",
         };
         
         // Copy lib files
