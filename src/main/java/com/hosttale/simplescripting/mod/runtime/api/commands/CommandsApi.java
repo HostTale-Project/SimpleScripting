@@ -187,48 +187,77 @@ public final class CommandsApi {
         @Override
         protected CompletableFuture<Void> execute(CommandContext commandContext) {
             try {
-                ParsedArgs parsed = parseArgs(commandContext.getInputString());
+                ParsedArgs parsed = CommandInputParser.parse(commandContext.getInputString(), commandNames);
                 runtime.callFunction(handler, new JsCommandContext(commandContext, playersApi, parsed.args(), parsed.raw()));
             } catch (Exception e) {
                 logger.atSevere().log("Command handler failed: %s", e.getMessage());
             }
             return CompletableFuture.completedFuture(null);
         }
+    }
 
-        private ParsedArgs parseArgs(String input) {
+    static final class CommandInputParser {
+
+        private CommandInputParser() {
+        }
+
+        static ParsedArgs parse(String input, java.util.List<String> commandNames) {
             if (input == null || input.isBlank()) {
-                return new ParsedArgs(new String[0], "");
+                return ParsedArgs.EMPTY;
             }
-            String[] tokens = input.trim().split("\\s+");
-            if (tokens.length == 0) {
-                return new ParsedArgs(new String[0], "");
+
+            int argsStart = findArgsStart(input, commandNames);
+            if (argsStart < 0) {
+                return ParsedArgs.EMPTY;
             }
-            int start = 0;
-            String first = strip(tokens[0]);
+
+            String afterCommand = input.substring(argsStart);
+            if (afterCommand.isBlank()) {
+                return ParsedArgs.EMPTY;
+            }
+
+            String[] args = afterCommand.trim().split("\\s+");
+            return new ParsedArgs(args, afterCommand);
+        }
+
+        private static int findArgsStart(String input, java.util.List<String> commandNames) {
+            int cursor = skipLeadingWhitespace(input);
             for (String name : commandNames) {
-                if (first.equalsIgnoreCase(strip(name))) {
-                    start = 1;
-                    break;
+                int end = matchesAt(input, cursor, name);
+                if (end >= 0 && isBoundary(input, end)) {
+                    return end;
+                }
+                end = matchesAt(input, cursor, "/" + name);
+                if (end >= 0 && isBoundary(input, end)) {
+                    return end;
                 }
             }
-            if (start >= tokens.length) {
-                return new ParsedArgs(new String[0], "");
-            }
-            int remaining = tokens.length - start;
-            String[] args = new String[remaining];
-            System.arraycopy(tokens, start, args, 0, remaining);
-            String raw = String.join(" ", args);
-            return new ParsedArgs(args, raw);
+            return -1;
         }
 
-        private String strip(String token) {
-            if (token == null) {
-                return "";
+        private static int skipLeadingWhitespace(String input) {
+            int idx = 0;
+            while (idx < input.length() && Character.isWhitespace(input.charAt(idx))) {
+                idx++;
             }
-            return token.startsWith("/") ? token.substring(1) : token;
+            return idx;
         }
 
-        private record ParsedArgs(String[] args, String raw) {
+        private static int matchesAt(String input, int offset, String candidate) {
+            if (offset + candidate.length() > input.length()) {
+                return -1;
+            }
+            return input.regionMatches(true, offset, candidate, 0, candidate.length())
+                    ? offset + candidate.length()
+                    : -1;
         }
+
+        private static boolean isBoundary(String input, int index) {
+            return index >= input.length() || Character.isWhitespace(input.charAt(index));
+        }
+    }
+
+    static final record ParsedArgs(String[] args, String raw) {
+        static final ParsedArgs EMPTY = new ParsedArgs(new String[0], "");
     }
 }

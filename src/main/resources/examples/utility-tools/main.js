@@ -105,10 +105,11 @@ function onEnable() {
   });
 
   server.runLater(2000, function() {
-    net.broadcast("utility-tools is active. Try /msg or /announce.");
+    net.broadcast("utility-tools is active. Try /msg or /ut-announce.");
   });
 }
 
 function onDisable() {
+  pendingTeleports = {};
   log.info("utility-tools disabled");
 }
