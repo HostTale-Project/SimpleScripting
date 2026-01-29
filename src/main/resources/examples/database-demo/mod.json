@@ -1,0 +1,6 @@
+{
+  "id": "database-demo",
+  "name": "Database Demo",
+  "version": "1.0.0",
+  "description": "Demonstrates per-mod SQLite usage with migrations, queries, and transactions."
+}

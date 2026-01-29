@@ -7,8 +7,10 @@ Server-side JavaScript for Hytale with per-mod isolation, lifecycle hooks, and o
 - Validates `mod.json` (schema below) and reports actionable errors.
 - Runs each mod in its own Rhino context/scope; hooks `onEnable/onDisable/onReload` are optional.
 - Tracks shared services so mods can expose and call APIs intentionally.
-- Seeds example mods on first run (`hello-world`, `shared-provider`, `shared-consumer`).
+- Seeds example mods on first run (`hello-world`, `shared-provider`, `shared-consumer`, `import-demo`, `utility-tools`, `status-tools`).
 - Provides helpers to bootstrap mods (`/createmod <mod-id>`) and refresh types (`/updatetypes <mod-id>`).
+- Injects JS facades for `server`, `events`, `commands`, `players`, `worlds`, `net`, `assets`, `ui`, and `log` so mods do not need Java imports.
+- Supports `require("./other-file.js")` to split mods into multiple files within the mod folder.
 
 ## Build & install
 ```
@@ -56,6 +58,37 @@ function onReload() {
 ```
 Hooks are optional; they are invoked if defined.
 
+## JS API surface (no Java imports needed)
+- `server`: `runLater/runRepeating`, `shutdown(reason?)`, `isBooted`, `name`.
+- `events`: `on/once/off/clear`, resolves common events by name (e.g. `PlayerChat`, `BreakBlock`, `Boot`). `events.knownEvents()` lists the built-ins.
+- `commands`: `register("modid:cmd", handler, { description, permission, allowExtraArgs })` returns a handle for `unregister`.
+- `players`: JS wrappers only (`PlayerHandle` with username/id/language/message/kick/isOnline`); `all/find/require/names/count/message/broadcast/disconnect`.
+- `worlds`: `list/get/getDefaultWorld/message/hasWorld` returning `WorldHandle` (name, players, sendMessage).
+- `net`: high-level `broadcast/send/kick/warn` (no raw packets exposed).
+- `assets`: placeholder wrapper (raw registry intentionally not exposed yet).
+- `ui`: build colored text via `ui.raw/ui.color/ui.join`; `sendMessage/broadcast/reply` accept these objects (no native `Message` exposed).
+- `log`/`console`: info/warn/error; references are read-only so mods cannot clobber each other.
+- Event payloads are wrapped (not raw Hytale objects). Example: `PlayerChat` provides `getPlayer()/getMessage()/setMessage()/cancel()`.
+- Commands use the native parser under the hood; JS handlers get `CommandContext` + parsed args (command token removed) via `ctx.args()`/`ctx.rawInput()`.
+
+### Imports between JS files
+Use `require("./relative-path")` to pull another `.js` file from the same mod directory (no `..` allowed). Modules get `exports`/`module` automatically:
+```javascript
+// util/math.js
+exports.sum = function(a, b) { return a + b; };
+
+// main.js
+const math = require("./util/math");
+log.info("2 + 3 = " + math.sum(2, 3));
+```
+
+## Wrapper conventions & naming
+- Methods on the injected facades use `camelCase`; tests enforce this (`WrapperConventionsTest`).
+- Command ids should be namespaced: `modid:command` (auto-prefixed if missing).
+- Event names use simple forms (e.g. `PlayerChat`, `BreakBlock`, `Boot`); see `events.knownEvents()`.
+- IDs/paths stay within the mod folder; `require` rejects `..` traversal and absolute paths.
+- Keep per-mod resources registered via the facades; disable/reload unregisters events/commands/tasks automatically.
+
 ## Shared services (opt-in cross-mod APIs)
 - Expose from a mod:
   ```javascript
@@ -74,6 +107,9 @@ Hooks are optional; they are invoked if defined.
 - `hello-world`: basic lifecycle logging.
 - `shared-provider`: exposes a `greetings` service.
 - `shared-consumer`: depends on `shared-provider` and calls its service.
+- `import-demo`: shows `require("./util/math.js")` and listening for `PlayerChat`.
+- `utility-tools`: `/msg`, `/ut-announce`, `/tpa`, chat filter.
+- `status-tools`: `/who`, `/worldinfo`, chat `!who`, shared status service, repeating broadcasts.
 Inspect them under `src/main/resources/examples/` (they are copied to `mods-js/` on first run).
 
 ## Commands

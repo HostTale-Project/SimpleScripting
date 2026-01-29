@@ -1,0 +1,90 @@
+$C = "../Common.ui";
+
+Group {
+    LayoutMode: Center;
+
+    Group #MainPanel {
+        Anchor: (Width: 700, Height: 550);
+        LayoutMode: Top;
+
+        // Header with script name
+        Label #Title {
+            Style: (FontSize: 20, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #b4c8c9);
+            Text: "Script Viewer";
+            Anchor: (Height: 50);
+            Padding: (Full: 10);
+        }
+
+        // Script content area
+        Group #ContentArea {
+            Anchor: (Top: 10, Bottom: 10);
+            Padding: (Horizontal: 20);
+            LayoutMode: Top;
+
+            MultilineTextField #ScriptContent {
+                Style: $C.@DefaultInputFieldStyle;
+                PlaceholderStyle: $C.@DefaultInputFieldPlaceholderStyle;
+                Background: #1a2530;
+                AutoGrow: false;
+                Padding: (Horizontal: 10, Vertical: 8);
+                Anchor: (Height: 400);
+            }
+        }
+
+        // Action buttons
+        Group #ActionButtons {
+            Anchor: (Height: 60);
+            LayoutMode: Center;
+
+            Group #ButtonRow {
+                LayoutMode: Left;
+                Anchor: (Width: 490);
+
+                Button #BackBtn {
+                    Anchor: (Width: 110, Height: 40, Right: 10);
+                    Style: (
+                        Default: (Background: #3a4a5a),
+                        Hovered: (Background: #4a5a6a),
+                        Pressed: (Background: #2a3a4a)
+                    );
+
+                    Label {
+                        Style: (FontSize: 16, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #bfcdd5);
+                        Text: "Back";
+                        Anchor: (Full: 0);
+                    }
+                }
+
+                Button #SaveBtn {
+                    Anchor: (Width: 110, Height: 40, Right: 10);
+                    Style: (
+                        Default: (Background: #2a5a3a),
+                        Hovered: (Background: #3a7a4a),
+                        Pressed: (Background: #1a4a2a)
+                    );
+
+                    Label {
+                        Style: (FontSize: 16, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #bfcdd5);
+                        Text: "Save";
+                        Anchor: (Full: 0);
+                    }
+                }
+
+                Button #ReloadBtn {
+                    Anchor: (Width: 140, Height: 40);
+                    Style: (
+                        Default: (Background: #3a4a5a),
+                        Hovered: (Background: #4a5a6a),
+                        Pressed: (Background: #2a3a4a)
+                    );
+
+                    Label {
+                        Style: (FontSize: 16, HorizontalAlignment: Center, VerticalAlignment: Center, TextColor: #bfcdd5);
+                        Text: "Reload Script";
+                        Anchor: (Full: 0);
+                    }
+                }
+            }
+        }
+    }
+}

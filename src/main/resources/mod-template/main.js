@@ -1,13 +1,18 @@
+// Example: const helpers = require("./helpers.js");
+
 function onEnable() {
-  console.info("__MOD_NAME__ enabled");
+  log.info("__MOD_NAME__ enabled");
+  events.on("Boot", function() {
+    log.info("__MOD_NAME__ saw server boot");
+  });
 }
 
 function onDisable() {
-  console.info("__MOD_NAME__ disabled");
+  log.info("__MOD_NAME__ disabled");
 }
 
 function onReload() {
-  console.info("__MOD_NAME__ reload requested");
+  log.info("__MOD_NAME__ reload requested");
 }
 
 // Expose optional shared API:

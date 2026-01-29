@@ -1,0 +1,6 @@
+{
+  "id": "import-demo",
+  "name": "Import Demo",
+  "version": "1.0.0",
+  "description": "Shows splitting a mod across multiple JS files"
+}

@@ -4,6 +4,7 @@ import com.hosttale.simplescripting.mod.model.JsModManifest;
 import com.hosttale.simplescripting.mod.model.JsModManifestReader;
 import com.hosttale.simplescripting.mod.model.JsModManifestValidator;
 import com.hosttale.simplescripting.mod.runtime.JsModRuntime;
+import com.hosttale.simplescripting.mod.runtime.JsPluginServices;
 import com.hypixel.hytale.logger.HytaleLogger;
 
 import java.io.IOException;
@@ -17,12 +18,14 @@ public final class JsModManager {
 
     private final Path modsRoot;
     private final HytaleLogger logger;
+    private final JsPluginServices pluginServices;
     private final SharedServiceRegistry sharedServiceRegistry = new SharedServiceRegistry();
     private final Map<String, JsModInstance> loadedMods = new ConcurrentHashMap<>();
 
-    public JsModManager(Path modsRoot, HytaleLogger logger) {
+    public JsModManager(Path modsRoot, HytaleLogger logger, JsPluginServices pluginServices) {
         this.modsRoot = modsRoot;
         this.logger = logger.getSubLogger("js-mods");
+        this.pluginServices = pluginServices;
     }
 
     public void discoverAndLoadMods() {
@@ -61,6 +64,18 @@ public final class JsModManager {
             logger.atSevere().log("Failed to reload mod %s: %s", id, e.getMessage());
             return false;
         }
+    }
+
+    public int reloadAll() {
+        List<String> ids = new ArrayList<>(loadedMods.keySet());
+        ids.sort(String::compareToIgnoreCase);
+        int reloaded = 0;
+        for (String id : ids) {
+            if (reloadMod(id)) {
+                reloaded++;
+            }
+        }
+        return reloaded;
     }
 
     public void disableAll() {
@@ -104,7 +119,7 @@ public final class JsModManager {
             return;
         }
 
-        JsModRuntime runtime = new JsModRuntime(definition, logger, sharedServiceRegistry);
+        JsModRuntime runtime = new JsModRuntime(definition, logger, sharedServiceRegistry, pluginServices);
         JsModInstance instance = new JsModInstance(definition, runtime, logger, sharedServiceRegistry);
         try {
             instance.loadAndEnable();

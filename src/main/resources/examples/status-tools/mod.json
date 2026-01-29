@@ -1,0 +1,6 @@
+{
+  "id": "status-tools",
+  "name": "Status Tools",
+  "version": "1.0.0",
+  "description": "Showcases events, commands, server tasks, SharedServices, and require()"
+}

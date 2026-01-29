@@ -1,0 +1,6 @@
+{
+  "id": "utility-tools",
+  "name": "Utility Tools",
+  "version": "1.0.0",
+  "description": "Examples using commands, events, net, and players wrappers"
+}
