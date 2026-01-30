@@ -59,6 +59,7 @@ class ScriptsCommandTest {
         when(player.getReference()).thenReturn(ref);
         when(ref.getStore()).thenReturn(store);
         when(player.getPlayerRef()).thenReturn(playerRef);
+        when(playerRef.isValid()).thenReturn(true);
         when(player.getPageManager()).thenReturn(pageManager);
 
         command.executeSync(ctx);

@@ -62,14 +62,31 @@ interface ServerApi {
   runRepeating(initialDelayMs: number, periodMs: number, handler: () => void): TaskHandle;
   shutdown(reason?: string): void;
   isBooted(): boolean;
+  runCommand(commandLine: string): void;
 }
 
+type PluginEventName =
+  | "boot"
+  | "shutdown"
+  | "playerConnect"
+  | "playerDisconnect"
+  | "playerReady"
+  | "playerChat"
+  | "playerInteract"
+  | "breakBlock"
+  | "placeBlock"
+  | "useBlock"
+  | "allWorldsLoaded"
+  | "startWorld"
+  | "addWorld"
+  | "removeWorld";
+
 interface EventsApi {
-  on(eventName: string, handler: (event: any) => void): string;
-  once(eventName: string, handler: (event: any) => void): string;
+  on(eventName: PluginEventName | string, handler: (event: any) => void): string;
+  once(eventName: PluginEventName | string, handler: (event: any) => void): string;
   off(handle: string): void;
   clear(): void;
-  knownEvents(): string[];
+  knownEvents(): PluginEventName[];
 }
 
 interface PlayerChatEventWrapper {
@@ -96,8 +113,11 @@ interface PlayerHandle {
   setLanguage(language: string): void;
   isOnline(): boolean;
   sendMessage(text: MessageLike): void;
+  sendTitle(title: MessageLike, subtitle?: MessageLike, options?: { important?: boolean; durationSeconds?: number; fadeInSeconds?: number; fadeOutSeconds?: number; zone?: string }): void;
+  hideTitle(fadeOutSeconds?: number): void;
   kick(reason?: string): void;
   getWorldName(): string;
+  getEntityRef(): EntityRef;
 }
 
 interface WorldHandle {
@@ -177,6 +197,139 @@ interface AssetsApi {
   warnUnsupported(): void;
 }
 
+// Core ECS types (opaque placeholders for typing)
+type EcsEventName = "BreakBlockEvent" | "PlaceBlockEvent" | "UseBlockEvent" | "UseBlockEvent$Pre" | "UseBlockEvent$Post" | "DamageBlockEvent" | "DropItemEvent" | "DropItemEvent$PlayerRequest" | "DropItemEvent$Drop" | "InteractivelyPickupItemEvent" | "CraftRecipeEvent" | "CraftRecipeEvent$Pre" | "CraftRecipeEvent$Post" | "SwitchActiveSlotEvent" | "ChangeGameModeEvent" | "DiscoverZoneEvent" | "DiscoverZoneEvent$Display" | "ChunkSaveEvent" | "ChunkUnloadEvent" | "MoonPhaseChangeEvent";
+
+interface EntityStore {}
+
+type EntityRef = Ref<EntityStore>;
+
+interface Ref<E = EntityStore> {
+  isValid(): boolean;
+  getStore(): Store<E> | null;
+}
+
+interface ComponentType<E = EntityStore, T = any> {}
+interface ResourceType<E = EntityStore, R = any> {}
+
+interface CommandBuffer<E = EntityStore> {
+  ensureAndGetComponent<T>(ref: Ref<E>, type: ComponentType<E, T>): T;
+  getComponent<T>(ref: Ref<E>, type: ComponentType<E, T>): T | null;
+  putComponent<T>(ref: Ref<E>, type: ComponentType<E, T>, component: T): void;
+  removeComponent<T>(ref: Ref<E>, type: ComponentType<E, T>): void;
+  tryRemoveComponent<T>(ref: Ref<E>, type: ComponentType<E, T>): void;
+  invoke(event: any): void;
+}
+
+interface Store<E = EntityStore> {
+  getComponent<T>(ref: Ref<E>, type: ComponentType<E, T>): T | null;
+  ensureAndGetComponent<T>(ref: Ref<E>, type: ComponentType<E, T>): T;
+  invoke(ref: Ref<E>, event: any): void;
+  invoke(event: any): void;
+}
+
+interface ArchetypeChunk<E = EntityStore> {
+  getComponent<T>(index: number, type: ComponentType<E, T>): T;
+  getReferenceTo(index: number): Ref<E>;
+}
+
+interface Query<E = EntityStore> {}
+interface SystemGroup<E = EntityStore> {}
+
+interface EcsEvent {}
+
+interface Vector3Like {
+  x: number;
+  y: number;
+  z: number;
+}
+
+interface EcsApi {
+  /** Resolve a PlayerHandle or EntityRef-like value to an ECS ref; returns null on failure. */
+  toRef(target: PlayerHandle | EntityRef | any): EntityRef | null;
+  getPosition(target: PlayerHandle | EntityRef): Vector3Like | null;
+  setPosition(target: PlayerHandle | EntityRef, pos: Vector3Like | [number, number, number] | number, commandBuffer?: any): void;
+  teleport(target: PlayerHandle | EntityRef, pos: Vector3Like | [number, number, number] | number, rot: Vector3Like | [number, number, number] | number, commandBuffer?: any): void;
+  getRotation(target: PlayerHandle | EntityRef): Vector3Like | null;
+  setRotation(target: PlayerHandle | EntityRef, rot: Vector3Like | [number, number, number] | number, commandBuffer?: any): void;
+  getHeadRotation(target: PlayerHandle | EntityRef): Vector3Like | null;
+  setHeadRotation(target: PlayerHandle | EntityRef, rot: Vector3Like | [number, number, number] | number, commandBuffer?: any): void;
+  getVelocity(target: PlayerHandle | EntityRef): Vector3Like | null;
+  setVelocity(target: PlayerHandle | EntityRef, vel: Vector3Like | [number, number, number] | number, commandBuffer?: any): void;
+  addForce(target: PlayerHandle | EntityRef, force: Vector3Like | [number, number, number] | number, commandBuffer?: any): void;
+  /** Acquire a command buffer, call fn(cmd), release it. */
+  withCommandBuffer(target: PlayerHandle | EntityRef | any, fn: (cmd: any) => void): void;
+  invokeEntityEvent(target: PlayerHandle | EntityRef, event: any): void;
+  invokeWorldEvent(target: PlayerHandle | EntityRef | any, event: any): void;
+  spawn(world: any, components: any[], reason?: "SPAWN" | "LOAD" | string): EntityRef;
+  archetype(componentTypes: any[] | any): any;
+  queryAny(): any;
+  queryAll(componentTypes: any[] | any): any;
+  queryNot(componentTypes: any[] | any): any;
+  queryOr(a: any[] | any, b: any[] | any): any;
+  registerTickableSystem(options: {
+    name?: string;
+    group?: any;
+    tick(dt: number, storeIndex: number, store: any): void;
+  }): any;
+  registerRunWhenPausedSystem(options: {
+    name?: string;
+    group?: any;
+    tick(dt: number, storeIndex: number, store: any): void;
+  }): any;
+  registerSystemGroup(): any;
+  registerSpatialResource(structure?: any): any;
+  registerEntityEventSystem(options: {
+    name?: string;
+    event: EcsEventName | string | any;
+    query?: any[] | any;
+    handle(event: any, ref: EntityRef, store: any, commandBuffer: any): void;
+  }): any;
+  registerWorldEventSystem(options: {
+    name?: string;
+    event: EcsEventName | string | any;
+    handle(event: any, store: any, commandBuffer: any): void;
+  }): any;
+  registerEntityTickingSystem(options: {
+    name?: string;
+    query?: any[] | any;
+    parallel?: boolean;
+    /** Optional system group for ordering; accepts ecs.damageGatherGroup() etc. */
+    group?: any;
+    tick(dt: number, entityIndex: number, chunk: any, store: any, commandBuffer: any): void;
+  }): any;
+  registerRefSystem(options: {
+    name?: string;
+    query?: any[] | any;
+    onAdd?(ref: EntityRef, addReason: any, store: any, commandBuffer: any): void;
+    onRemove?(ref: EntityRef, removeReason: any, store: any, commandBuffer: any): void;
+  }): any;
+  registerRefChangeSystem(options: {
+    name?: string;
+    component: any;
+    onComponentAdded?(ref: EntityRef, component: any, store: any, commandBuffer: any): void;
+    onComponentSet?(ref: EntityRef, oldComponent: any, newComponent: any, store: any, commandBuffer: any): void;
+    onComponentRemoved?(ref: EntityRef, component: any, store: any, commandBuffer: any): void;
+  }): any;
+  registerComponent(id: string, supplier?: () => any): any;
+  // Overload: allow calling without supplier (defaults to dynamic component).
+  registerComponent(id: string): any;
+  registerResource(id: string, supplier?: () => any): any;
+  createComponent(type: any): any;
+  /** Map of vanilla component types keyed by simple class name. */
+  components(): Record<string, any>;
+  /** Map of vanilla ECS event classes keyed by simple class name. */
+  events(): Record<string, any>;
+  /** Map of known DamageCause objects keyed by constant name and id. */
+  damageCauses(): Record<string, any>;
+  /** Damage helpers */
+  applyDamage(target: PlayerHandle | EntityRef, options: number | { amount: number; cause?: string | any }): void;
+  /** Common system groups from the Damage module (may be null if module not loaded). */
+  damageGatherGroup(): any;
+  damageFilterGroup(): any;
+  damageInspectGroup(): any;
+}
+
 declare const modManifest: ModManifest;
 declare const console: ConsoleBridge;
 declare const log: ConsoleBridge;
@@ -191,6 +344,7 @@ declare const worlds: WorldsApi;
 declare const net: NetApi;
 declare const ui: UiApi;
 declare const assets: AssetsApi;
+declare const ecs: EcsApi;
 declare function require(path: string): any;
 
 /**

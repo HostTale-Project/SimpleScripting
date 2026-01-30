@@ -38,7 +38,7 @@ public final class EventCatalog {
         this.logger = logger.getSubLogger("event-catalog");
     }
 
-    public Class<? extends IBaseEvent<?>> resolve(String name) {
+    public Class<?> resolve(String name) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Event name is required.");
         }
@@ -60,15 +60,10 @@ public final class EventCatalog {
                 .toList();
     }
 
-    private Class<? extends IBaseEvent<?>> load(String className, String providedName) {
+    private Class<?> load(String className, String providedName) {
         try {
             Class<?> loaded = Class.forName(className);
-            if (!IBaseEvent.class.isAssignableFrom(loaded)) {
-                throw new IllegalArgumentException("Event '" + providedName + "' does not implement IBaseEvent.");
-            }
-            @SuppressWarnings("unchecked")
-            Class<? extends IBaseEvent<?>> cast = (Class<? extends IBaseEvent<?>>) loaded;
-            return cast;
+            return loaded;
         } catch (ClassNotFoundException e) {
             logger.atWarning().log("Tried to hook event %s but class %s was not found.", providedName, className);
             throw new IllegalArgumentException("Event class not found for '" + providedName + "'.", e);

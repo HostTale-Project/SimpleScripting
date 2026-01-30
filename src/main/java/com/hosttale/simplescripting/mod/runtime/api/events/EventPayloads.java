@@ -1,7 +1,9 @@
 package com.hosttale.simplescripting.mod.runtime.api.events;
 
-import com.hypixel.hytale.event.IBaseEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerChatEvent;
+import com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent;
+import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
+import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hosttale.simplescripting.mod.runtime.api.events.GenericEvent;
 import com.hosttale.simplescripting.mod.runtime.api.players.PlayerHandle;
 
@@ -12,9 +14,20 @@ public final class EventPayloads {
     private EventPayloads() {
     }
 
-    public static Object adapt(IBaseEvent<?> event) {
+    public static Object adapt(Object event) {
         if (event instanceof PlayerChatEvent chat) {
             return new PlayerChat(chat);
+        }
+        if (event instanceof PlayerConnectEvent connect) {
+            return new PlayerRefPayload("playerConnect", connect.getPlayerRef());
+        }
+        if (event instanceof PlayerDisconnectEvent disconnect) {
+            return new PlayerRefPayload("playerDisconnect", disconnect.getPlayerRef());
+        }
+        if (event instanceof PlayerReadyEvent ready) {
+            var player = ready.getPlayer();
+            var ref = player == null ? null : player.getPlayerRef();
+            return new PlayerRefPayload("playerReady", ref);
         }
         return new GenericEvent(event);
     }
@@ -70,5 +83,27 @@ public final class EventPayloads {
             delegate.setCancelled(true);
         }
 
+    }
+
+    public static final class PlayerRefPayload {
+        private final String type;
+        private final PlayerHandle player;
+
+        public PlayerRefPayload(String type, com.hypixel.hytale.server.core.universe.PlayerRef playerRef) {
+            this.type = type;
+            this.player = new PlayerHandle(playerRef);
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public PlayerHandle getPlayer() {
+            return player;
+        }
+
+        public PlayerHandle getPlayerRef() {
+            return player;
+        }
     }
 }

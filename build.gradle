@@ -101,6 +101,17 @@ tasks.named('processResources') {
 tasks.named('shadowJar') {
     archiveClassifier.set('')
     mergeServiceFiles()
+    // Shade runtime deps into the plugin jar so it is self contained.
+    configurations = [project.configurations.runtimeClasspath]
+    dependencies {
+        include(dependency("org.mozilla:rhino"))
+        include(dependency("com.fasterxml.jackson.core:jackson-databind"))
+        include(dependency("com.fasterxml.jackson.core:jackson-annotations"))
+        include(dependency("com.fasterxml.jackson.core:jackson-core"))
+        include(dependency("org.xerial:sqlite-jdbc"))
+    }
+    // Some deps (sqlite) are large; enable zip64 to be safe.
+    zip64 true
 }
 
 // Ensure the shaded jar is produced during a normal build.

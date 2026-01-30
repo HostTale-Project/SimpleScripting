@@ -35,10 +35,15 @@ public final class JsCommandContext {
             return null;
         }
         Player player = delegate.senderAs(Player.class);
-        if (player == null || player.getPlayerRef() == null) {
+        if (player == null) {
             return null;
         }
-        return playersApi.wrap(player.getPlayerRef());
+        // Prefer PlayerRef (authoritative) when available.
+        if (player.getPlayerRef() != null) {
+            return playersApi.wrap(player.getPlayerRef());
+        }
+        // No PlayerRef available.
+        return null;
     }
 
     public String[] args() {

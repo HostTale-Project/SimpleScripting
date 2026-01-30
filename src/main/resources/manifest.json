@@ -11,7 +11,7 @@
     "Website": "wiki.hosttale.com",
     "ServerVersion": "*",
     "Dependencies": {
-        
+        "Hytale:EntityModule": "*"
     },
     "OptionalDependencies": {
         

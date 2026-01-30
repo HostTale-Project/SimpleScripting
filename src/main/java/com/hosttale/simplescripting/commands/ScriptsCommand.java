@@ -39,9 +39,14 @@ public final class ScriptsCommand extends CommandBase {
             return;
         }
 
-        com.hypixel.hytale.component.Store<EntityStore> store = player.getReference().getStore();
+        com.hypixel.hytale.component.Store<EntityStore> store = ref.getStore();
+        if (store == null) {
+            commandContext.sendMessage(Message.raw("Unable to open scripts UI right now."));
+            return;
+        }
+
         PlayerRef playerRef = player.getPlayerRef();
-        if (playerRef == null) {
+        if (playerRef == null || !playerRef.isValid()) {
             commandContext.sendMessage(Message.raw("Unable to open scripts UI right now."));
             return;
         }

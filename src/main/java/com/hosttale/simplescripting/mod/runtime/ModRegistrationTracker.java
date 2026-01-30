@@ -2,7 +2,6 @@ package com.hosttale.simplescripting.mod.runtime;
 
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.registry.Registration;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
@@ -12,12 +11,18 @@ import java.util.concurrent.ScheduledFuture;
  */
 public final class ModRegistrationTracker {
 
-    private final List<Registration> registrations = new ArrayList<>();
+    private final List<Runnable> registrations = new ArrayList<>();
     private final List<ScheduledFuture<?>> scheduledFutures = new ArrayList<>();
 
     public synchronized void trackRegistration(Registration registration) {
         if (registration != null) {
-            registrations.add(registration);
+            registrations.add(registration::unregister);
+        }
+    }
+
+    public synchronized void trackRegistration(Runnable unregister) {
+        if (unregister != null) {
+            registrations.add(unregister);
         }
     }
 
@@ -28,9 +33,9 @@ public final class ModRegistrationTracker {
     }
 
     public synchronized void clearAll(HytaleLogger logger) {
-        registrations.forEach(registration -> {
+        registrations.forEach(unregister -> {
             try {
-                registration.unregister();
+                unregister.run();
             } catch (Exception e) {
                 logger.atWarning().log("Failed to unregister resource: %s", e.getMessage());
             }

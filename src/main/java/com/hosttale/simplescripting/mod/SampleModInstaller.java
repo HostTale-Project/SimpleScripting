@@ -35,6 +35,8 @@ public final class SampleModInstaller {
         installExample(resourceLoader, modsRoot, logger, "utility-tools");
         installExample(resourceLoader, modsRoot, logger, "status-tools", "util/format.js");
         installExample(resourceLoader, modsRoot, logger, "database-demo");
+        installExample(resourceLoader, modsRoot, logger, "ecs-poison");
+        installExample(resourceLoader, modsRoot, logger, "ecs-teams");
     }
 
     private static void installExample(ClassLoader loader, Path modsRoot, HytaleLogger logger, String name, String... extraFiles) {
