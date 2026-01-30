@@ -64,12 +64,28 @@ interface ServerApi {
   isBooted(): boolean;
 }
 
+type PluginEventName =
+  | "boot"
+  | "shutdown"
+  | "playerConnect"
+  | "playerDisconnect"
+  | "playerReady"
+  | "playerChat"
+  | "playerInteract"
+  | "breakBlock"
+  | "placeBlock"
+  | "useBlock"
+  | "allWorldsLoaded"
+  | "startWorld"
+  | "addWorld"
+  | "removeWorld";
+
 interface EventsApi {
-  on(eventName: string, handler: (event: any) => void): string;
-  once(eventName: string, handler: (event: any) => void): string;
+  on(eventName: PluginEventName | string, handler: (event: any) => void): string;
+  once(eventName: PluginEventName | string, handler: (event: any) => void): string;
   off(handle: string): void;
   clear(): void;
-  knownEvents(): string[];
+  knownEvents(): PluginEventName[];
 }
 
 interface PlayerChatEventWrapper {
@@ -180,7 +196,47 @@ interface AssetsApi {
   warnUnsupported(): void;
 }
 
-type EntityRef = any;
+
+// Core ECS types (opaque placeholders for typing)
+type EcsEventName = "BreakBlockEvent" | "PlaceBlockEvent" | "UseBlockEvent" | "UseBlockEvent$Pre" | "UseBlockEvent$Post" | "DamageBlockEvent" | "DropItemEvent" | "DropItemEvent$PlayerRequest" | "DropItemEvent$Drop" | "InteractivelyPickupItemEvent" | "CraftRecipeEvent" | "CraftRecipeEvent$Pre" | "CraftRecipeEvent$Post" | "SwitchActiveSlotEvent" | "ChangeGameModeEvent" | "DiscoverZoneEvent" | "DiscoverZoneEvent$Display" | "ChunkSaveEvent" | "ChunkUnloadEvent" | "MoonPhaseChangeEvent";
+
+interface EntityStore {}
+
+type EntityRef = Ref<EntityStore>;
+
+interface Ref<E = EntityStore> {
+  isValid(): boolean;
+  getStore(): Store<E> | null;
+}
+
+interface ComponentType<E = EntityStore, T = any> {}
+interface ResourceType<E = EntityStore, R = any> {}
+
+interface CommandBuffer<E = EntityStore> {
+  ensureAndGetComponent<T>(ref: Ref<E>, type: ComponentType<E, T>): T;
+  getComponent<T>(ref: Ref<E>, type: ComponentType<E, T>): T | null;
+  putComponent<T>(ref: Ref<E>, type: ComponentType<E, T>, component: T): void;
+  removeComponent<T>(ref: Ref<E>, type: ComponentType<E, T>): void;
+  tryRemoveComponent<T>(ref: Ref<E>, type: ComponentType<E, T>): void;
+  invoke(event: any): void;
+}
+
+interface Store<E = EntityStore> {
+  getComponent<T>(ref: Ref<E>, type: ComponentType<E, T>): T | null;
+  ensureAndGetComponent<T>(ref: Ref<E>, type: ComponentType<E, T>): T;
+  invoke(ref: Ref<E>, event: any): void;
+  invoke(event: any): void;
+}
+
+interface ArchetypeChunk<E = EntityStore> {
+  getComponent<T>(index: number, type: ComponentType<E, T>): T;
+  getReferenceTo(index: number): Ref<E>;
+}
+
+interface Query<E = EntityStore> {}
+interface SystemGroup<E = EntityStore> {}
+
+interface EcsEvent {}
 
 interface Vector3Like {
   x: number;
@@ -225,13 +281,13 @@ interface EcsApi {
   registerSpatialResource(structure?: any): any;
   registerEntityEventSystem(options: {
     name?: string;
-    event: string | any;
+    event: EcsEventName | string | any;
     query?: any[] | any;
     handle(event: any, ref: EntityRef, store: any, commandBuffer: any): void;
   }): any;
   registerWorldEventSystem(options: {
     name?: string;
-    event: string | any;
+    event: EcsEventName | string | any;
     handle(event: any, store: any, commandBuffer: any): void;
   }): any;
   registerEntityTickingSystem(options: {
