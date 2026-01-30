@@ -66,6 +66,10 @@ public final class PlayerHandle {
         EventTitleUtil.hideEventTitleFromPlayer(playerRef, fadeOutSeconds);
     }
 
+    public void hideTitle() {
+        EventTitleUtil.hideEventTitleFromPlayer(playerRef, EventTitleUtil.DEFAULT_FADE_DURATION);
+    }
+
     public void kick(String reason) {
         String message = (reason == null || reason.isBlank()) ? "Disconnected by server" : reason;
         playerRef.getPacketHandler().disconnect(message);

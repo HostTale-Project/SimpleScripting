@@ -260,7 +260,7 @@ interface EcsApi {
   /** Acquire a command buffer, call fn(cmd), release it. */
   withCommandBuffer(target: PlayerHandle | EntityRef | any, fn: (cmd: any) => void): void;
   invokeEntityEvent(target: PlayerHandle | EntityRef, event: any): void;
-  invokeWorldEvent(event: any): void;
+  invokeWorldEvent(target: PlayerHandle | EntityRef | any, event: any): void;
   spawn(world: any, components: any[], reason?: "SPAWN" | "LOAD" | string): EntityRef;
   archetype(componentTypes: any[] | any): any;
   queryAny(): any;

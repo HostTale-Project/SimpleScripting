@@ -4,15 +4,16 @@ import com.hypixel.hytale.component.Component;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import org.mozilla.javascript.ScriptableObject;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Simple dynamic component storing a key/value map copied from a JS object.
  */
 public final class JsDynamicComponent implements Component<EntityStore> {
 
-    private final Map<String, Object> data = new HashMap<>();
+    // Concurrent to tolerate reads/writes during parallel system ticks when mods share this component instance.
+    private final Map<String, Object> data = new ConcurrentHashMap<>();
 
     public JsDynamicComponent() {
     }
