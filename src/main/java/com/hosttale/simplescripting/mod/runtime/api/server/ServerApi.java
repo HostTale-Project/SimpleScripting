@@ -5,6 +5,8 @@ import com.hosttale.simplescripting.mod.runtime.ModRegistrationTracker;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.HytaleServer;
 import com.hypixel.hytale.server.core.ShutdownReason;
+import com.hypixel.hytale.server.core.command.system.CommandManager;
+import com.hypixel.hytale.server.core.console.ConsoleSender;
 import com.hypixel.hytale.server.core.task.TaskRegistration;
 import com.hypixel.hytale.server.core.task.TaskRegistry;
 import org.mozilla.javascript.Function;
@@ -92,6 +94,21 @@ public final class ServerApi {
 
     public boolean isBooted() {
         return HytaleServer.get().isBooted();
+    }
+
+    /**
+     * Execute a command as the server console. Useful for invoking other plugins/commands from JS.
+     */
+    public void runCommand(String commandLine) {
+        if (commandLine == null || commandLine.isBlank()) {
+            throw new IllegalArgumentException("server.runCommand requires a non-empty command string.");
+        }
+        try {
+            CommandManager.get().handleCommand(ConsoleSender.INSTANCE, commandLine).join();
+        } catch (Exception e) {
+            logger.atSevere().log("runCommand failed: %s", e.getMessage());
+            throw new IllegalStateException("Failed to execute command: " + e.getMessage(), e);
+        }
     }
 
     public record JsTaskHandle(String id, ScheduledFuture<?> future) {

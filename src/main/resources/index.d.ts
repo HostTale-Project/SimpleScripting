@@ -62,6 +62,7 @@ interface ServerApi {
   runRepeating(initialDelayMs: number, periodMs: number, handler: () => void): TaskHandle;
   shutdown(reason?: string): void;
   isBooted(): boolean;
+  runCommand(commandLine: string): void;
 }
 
 type PluginEventName =
