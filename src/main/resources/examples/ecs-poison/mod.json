@@ -1,0 +1,8 @@
+{
+  "id": "ecs-poison",
+  "name": "ECS Poison Demo",
+  "version": "1.0.0",
+  "entrypoint": "main.js",
+  "description": "Demonstrates a custom Poison component + damage ticking system via ECS.",
+  "permissions": []
+}

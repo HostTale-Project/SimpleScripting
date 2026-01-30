@@ -5,8 +5,6 @@ import com.hosttale.simplescripting.mod.runtime.ModRegistrationTracker;
 import com.hosttale.simplescripting.mod.runtime.api.events.EventPayloads;
 import com.hypixel.hytale.event.EventRegistration;
 import com.hypixel.hytale.event.EventRegistry;
-import com.hypixel.hytale.event.IBaseEvent;
-import com.hypixel.hytale.event.IAsyncEvent;
 import com.hypixel.hytale.logger.HytaleLogger;
 import org.mozilla.javascript.Function;
 
@@ -69,10 +67,10 @@ public final class EventsApi {
         if (handler == null) {
             throw new IllegalArgumentException("events.on requires a callback function.");
         }
-        Class<? extends IBaseEvent<?>> eventClass = catalog.resolve(eventName);
+        Class<?> eventClass = catalog.resolve(eventName);
         String handle = modId + "-evt-" + idSequence.incrementAndGet();
 
-        Consumer<IBaseEvent<?>> consumer = event -> {
+        Consumer<Object> consumer = event -> {
             try {
                 Object payload = EventPayloads.adapt(event);
                 runtime.callFunction(handler, payload);
@@ -91,22 +89,21 @@ public final class EventsApi {
         return handle;
     }
 
-    private EventRegistration<?, ?> register(Class<? extends IBaseEvent<?>> eventClass, Consumer<IBaseEvent<?>> consumer) {
-        if (IAsyncEvent.class.isAssignableFrom(eventClass)) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private EventRegistration<?, ?> register(Class<?> eventClass, Consumer<Object> consumer) {
+        if (com.hypixel.hytale.event.IAsyncEvent.class.isAssignableFrom(eventClass)) {
             java.util.function.Function<CompletableFuture, CompletableFuture> fn = future -> future.thenApply(event -> {
                 try {
-                    consumer.accept((IBaseEvent<?>) event);
+                    consumer.accept(event);
                 } catch (Exception e) {
                     logger.atSevere().log("Async event handler failed: %s", e.getMessage());
                 }
                 return event;
             });
-            @SuppressWarnings({"rawtypes", "unchecked"})
             EventRegistration<?, ?> registration = eventRegistry.registerAsyncGlobal((Class) eventClass, (java.util.function.Function) fn);
             return registration;
         }
 
-        @SuppressWarnings({"rawtypes", "unchecked"})
         EventRegistration<?, ?> registration = eventRegistry.registerGlobal((Class) eventClass, (Consumer) consumer);
         return registration;
     }

@@ -10,9 +10,11 @@ import com.hosttale.simplescripting.mod.runtime.api.events.EventsApi;
 import com.hosttale.simplescripting.mod.runtime.api.modules.ModuleImports;
 import com.hosttale.simplescripting.mod.runtime.api.net.NetApi;
 import com.hosttale.simplescripting.mod.runtime.api.players.PlayersApi;
+import com.hosttale.simplescripting.mod.runtime.api.ecs.EcsApi;
 import com.hosttale.simplescripting.mod.runtime.api.server.ServerApi;
 import com.hosttale.simplescripting.mod.runtime.api.ui.UiApi;
 import com.hosttale.simplescripting.mod.runtime.api.worlds.WorldsApi;
+import com.hosttale.simplescripting.mod.runtime.ModRegistrationTracker;
 import com.hypixel.hytale.logger.HytaleLogger;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
@@ -114,6 +116,7 @@ public final class JsModRuntime implements AutoCloseable {
                 new ServerApi(modId, pluginServices.getTaskRegistry(), registrationTracker, this, logger),
                 scope));
         defineConstant("net", Context.javaToJS(new NetApi(playersApi, logger), scope));
+        defineConstant("ecs", Context.javaToJS(new EcsApi(logger, registrationTracker, this), scope));
         defineConstant("assets", Context.javaToJS(new AssetsApi(logger), scope));
         defineConstant("ui", Context.javaToJS(new UiApi(), scope));
         databaseApi = new DatabaseApi(modId, this, logger);

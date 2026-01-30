@@ -1,7 +1,11 @@
 package com.hosttale.simplescripting.mod.runtime.api.players;
 
 import com.hosttale.simplescripting.mod.runtime.api.ui.UiMessageRenderer;
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.hypixel.hytale.server.core.util.EventTitleUtil;
 
 import java.util.Locale;
 import java.util.UUID;
@@ -44,6 +48,24 @@ public final class PlayerHandle {
         playerRef.sendMessage(UiMessageRenderer.toMessage(text));
     }
 
+    public void sendTitle(Object title) {
+        sendTitle(title, null, false, EventTitleUtil.DEFAULT_DURATION, EventTitleUtil.DEFAULT_FADE_DURATION, EventTitleUtil.DEFAULT_FADE_DURATION, EventTitleUtil.DEFAULT_ZONE);
+    }
+
+    public void sendTitle(Object title, Object subtitle) {
+        sendTitle(title, subtitle, false, EventTitleUtil.DEFAULT_DURATION, EventTitleUtil.DEFAULT_FADE_DURATION, EventTitleUtil.DEFAULT_FADE_DURATION, EventTitleUtil.DEFAULT_ZONE);
+    }
+
+    public void sendTitle(Object title, Object subtitle, boolean important, float durationSeconds, float fadeInSeconds, float fadeOutSeconds, String zone) {
+        Message main = UiMessageRenderer.toMessage(title);
+        Message sub = subtitle == null ? null : UiMessageRenderer.toMessage(subtitle);
+        EventTitleUtil.showEventTitleToPlayer(playerRef, main, sub, important, zone, durationSeconds, fadeInSeconds, fadeOutSeconds);
+    }
+
+    public void hideTitle(float fadeOutSeconds) {
+        EventTitleUtil.hideEventTitleFromPlayer(playerRef, fadeOutSeconds);
+    }
+
     public void kick(String reason) {
         String message = (reason == null || reason.isBlank()) ? "Disconnected by server" : reason;
         playerRef.getPacketHandler().disconnect(message);
@@ -51,5 +73,13 @@ public final class PlayerHandle {
 
     public String getWorldName() {
         return playerRef.getWorldUuid() == null ? "" : playerRef.getWorldUuid().toString();
+    }
+
+    public PlayerRef unwrap() {
+        return playerRef;
+    }
+
+    public Ref<EntityStore> getEntityRef() {
+        return playerRef.getReference();
     }
 }
