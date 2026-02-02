@@ -36,6 +36,11 @@ public class SimpleScriptingPlugin extends JavaPlugin {
         JsPluginServices pluginServices = JsPluginServices.fromPlugin(this);
         jsModManager = new JsModManager(modsRoot, LOGGER, pluginServices);
         scriptBrowser = new ScriptBrowser(modsRoot, jsModManager, LOGGER);
+    }
+
+    @Override
+    protected void start() {
+        super.start();
         jsModManager.discoverAndLoadMods();
         registerCommands();
     }
