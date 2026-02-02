@@ -14,7 +14,8 @@
         "Hytale:EntityModule": "*"
     },
     "OptionalDependencies": {
-        
+        "TheNewEconomy:VaultUnlocked": "*",
+        "com.eliteessentials:EliteEssentials": "*"
     },
     "DisabledByDefault": false,
     "Main": "com.hosttale.simplescripting.SimpleScriptingPlugin",

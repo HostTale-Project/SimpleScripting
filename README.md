@@ -67,6 +67,7 @@ Hooks are optional; they are invoked if defined.
 - `net`: high-level `broadcast/send/kick/warn` (no raw packets exposed).
 - `assets`: placeholder wrapper (raw registry intentionally not exposed yet).
 - `ui`: build colored text via `ui.raw/ui.color/ui.join`; `sendMessage/broadcast/reply` accept these objects (no native `Message` exposed).
+- `economy`: multi-provider economy integration for player balances (`balance/withdraw/deposit/has/isAvailable/getName`); optional - economy features are available when VaultUnlocked and/or EliteEssentials plugin is installed separately on the server.
 - `log`/`console`: info/warn/error; references are read-only so mods cannot clobber each other.
 - Event payloads are wrapped (not raw Hytale objects). Example: `PlayerChat` provides `getPlayer()/getMessage()/setMessage()/cancel()`.
 - Commands use the native parser under the hood; JS handlers get `CommandContext` + parsed args (command token removed) via `ctx.args()`/`ctx.rawInput()`.

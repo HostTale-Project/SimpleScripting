@@ -197,6 +197,15 @@ interface AssetsApi {
   warnUnsupported(): void;
 }
 
+interface EconomyApi {
+  isAvailable(): boolean;
+  balance(playerUuid: string): number;
+  deposit(playerUuid: string, amount: number): boolean;
+  withdraw(playerUuid: string, amount: number): boolean;
+  has(playerUuid: string, amount: number): boolean;
+  getName(): string;
+}
+
 
 // Core ECS types (opaque placeholders for typing)
 type EcsEventName = "BreakBlockEvent" | "PlaceBlockEvent" | "UseBlockEvent" | "UseBlockEvent$Pre" | "UseBlockEvent$Post" | "DamageBlockEvent" | "DropItemEvent" | "DropItemEvent$PlayerRequest" | "DropItemEvent$Drop" | "InteractivelyPickupItemEvent" | "CraftRecipeEvent" | "CraftRecipeEvent$Pre" | "CraftRecipeEvent$Post" | "SwitchActiveSlotEvent" | "ChangeGameModeEvent" | "DiscoverZoneEvent" | "DiscoverZoneEvent$Display" | "ChunkSaveEvent" | "ChunkUnloadEvent" | "MoonPhaseChangeEvent";
@@ -346,6 +355,7 @@ declare const net: NetApi;
 declare const ui: UiApi;
 declare const assets: AssetsApi;
 declare const ecs: EcsApi;
+declare const economy: EconomyApi;
 declare function require(path: string): any;
 
 /**

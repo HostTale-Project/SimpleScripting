@@ -1,0 +1,9 @@
+{
+  "id": "economy-demo",
+  "name": "Economy Demo",
+  "version": "1.0.0",
+  "entrypoint": "main.js",
+  "requiredAssetPacks": [],
+  "permissions": [],
+  "description": "Example JS mod demonstrating VaultUnlocked economy integration."
+}
