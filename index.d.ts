@@ -106,7 +106,43 @@ interface GenericEventWrapper {
   describe(): string;
 }
 
-interface PlayerHandle {
+/**
+ * Base class for all entity wrappers.
+ * Provides common entity reference management.
+ */
+interface EntityHandle {
+  /** Get the underlying ECS entity reference */
+  getEntityRef(): EntityRef;
+  /** Check if the entity reference is still valid */
+  isValid(): boolean;
+  /** Get a string representation of the entity ID for logging */
+  getEntityId(): string;
+}
+
+/**
+ * Wrapper for LivingEntity providing inventory access capabilities.
+ * Extends EntityHandle to provide common entity functionality.
+ */
+interface LivingEntityHandle extends EntityHandle {
+  /** Get the inventory of this living entity (Phase 1) */
+  getInventory(): any; // Will return InventoryHandle in Phase 1
+  /** Check if this living entity has an inventory */
+  hasInventory(): boolean;
+}
+
+/**
+ * Wrapper for NPC entities.
+ * Placeholder for future NPC API implementation.
+ */
+interface NpcHandle extends LivingEntityHandle {
+  // Future methods: getDialogue(), getTrades(), getAI(), spawn(), despawn(), etc.
+}
+
+/**
+ * Wrapper for player entities providing messaging, titles, and player-specific functionality.
+ * Extends LivingEntityHandle to inherit inventory access capabilities.
+ */
+interface PlayerHandle extends LivingEntityHandle {
   getUsername(): string;
   getId(): string;
   getLanguage(): string;
@@ -117,7 +153,8 @@ interface PlayerHandle {
   hideTitle(fadeOutSeconds?: number): void;
   kick(reason?: string): void;
   getWorldName(): string;
-  getEntityRef(): EntityRef;
+  // Inherited from LivingEntityHandle: getInventory(), hasInventory()
+  // Inherited from EntityHandle: getEntityRef(), isValid(), getEntityId()
 }
 
 interface WorldHandle {
@@ -206,8 +243,59 @@ interface EconomyApi {
   getName(): string;
 }
 
+
 // Core ECS types (opaque placeholders for typing)
-type EcsEventName = "BreakBlockEvent" | "PlaceBlockEvent" | "UseBlockEvent" | "UseBlockEvent$Pre" | "UseBlockEvent$Post" | "DamageBlockEvent" | "DropItemEvent" | "DropItemEvent$PlayerRequest" | "DropItemEvent$Drop" | "InteractivelyPickupItemEvent" | "CraftRecipeEvent" | "CraftRecipeEvent$Pre" | "CraftRecipeEvent$Post" | "SwitchActiveSlotEvent" | "ChangeGameModeEvent" | "DiscoverZoneEvent" | "DiscoverZoneEvent$Display" | "ChunkSaveEvent" | "ChunkUnloadEvent" | "MoonPhaseChangeEvent";
+// 34 events organized by priority groups (matching EventCatalog.java)
+type EcsEventName = 
+  // Priority 1: Server Lifecycle (3 events)
+  | "BootEvent"
+  | "ServerShutdownEvent"
+  | "PrepareUniverseEvent"
+  // Priority 2: Inventory Events (6 events)
+  | "LivingEntityInventoryChangeEvent"
+  | "DropItemEvent"
+  | "DropItemEvent$PlayerRequest"
+  | "DropItemEvent$Drop"
+  | "InteractivelyPickupItemEvent"
+  | "SwitchActiveSlotEvent"
+  | "CraftRecipeEvent"
+  | "CraftRecipeEvent$Pre"
+  | "CraftRecipeEvent$Post"
+  | "PlayerCraftEvent"
+  // Priority 3: Entity Events (3 events)
+  | "EntityEvent"
+  | "EntityRemoveEvent"
+  | "LivingEntityUseBlockEvent"
+  // Priority 4: Player Lifecycle (6 events)
+  | "AddPlayerToWorldEvent"
+  | "DrainPlayerFromWorldEvent"
+  | "PlayerSetupConnectEvent"
+  | "PlayerSetupDisconnectEvent"
+  | "PlayerRefEvent"
+  | "PlayerEvent"
+  // Priority 5: Player Interaction (2 events)
+  | "PlayerMouseButtonEvent"
+  | "PlayerMouseMotionEvent"
+  // Priority 6: Block Events (4 events)
+  | "BreakBlockEvent"
+  | "PlaceBlockEvent"
+  | "UseBlockEvent"
+  | "UseBlockEvent$Pre"
+  | "UseBlockEvent$Post"
+  | "DamageBlockEvent"
+  // Priority 7: World Events (4 events)
+  | "ChunkSaveEvent"
+  | "ChunkUnloadEvent"
+  | "MoonPhaseChangeEvent"
+  | "WorldLoadEvent"
+  // Priority 8: Permissions (3 events)
+  | "PermissionEvent$CheckIndividualPermission"
+  | "PermissionEvent$CheckPermissions"
+  | "PermissionEvent$PermissionsChanged"
+  // Priority 9: Misc (3 events)
+  | "ChangeGameModeEvent"
+  | "DiscoverZoneEvent"
+  | "DiscoverZoneEvent$Display";
 
 interface EntityStore {}
 
