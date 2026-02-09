@@ -1,0 +1,10 @@
+{
+  "id": "afk-manager",
+  "name": "AFK Manager",
+  "version": "1.0.0",
+  "entrypoint": "main.js",
+  "enabled": false,
+  "requiredAssetPacks": [],
+  "permissions": [],
+  "description": "Automatically detects and manages AFK players. Broadcasts AFK status and can auto-kick."
+}

@@ -11,7 +11,6 @@ import com.hypixel.hytale.server.core.task.TaskRegistration;
 import com.hypixel.hytale.server.core.task.TaskRegistry;
 import org.mozilla.javascript.Function;
 
-import java.util.Locale;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;

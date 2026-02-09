@@ -1,0 +1,10 @@
+{
+  "id": "simple-stats",
+  "name": "Simple Stats",
+  "version": "1.0.0",
+  "entrypoint": "main.js",
+  "enabled": false,
+  "requiredAssetPacks": [],
+  "permissions": [],
+  "description": "Player statistics tracker with leaderboards. Tracks joins, playtime, deaths, and more."
+}

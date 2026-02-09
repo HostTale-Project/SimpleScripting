@@ -30,6 +30,7 @@ public final class JsCommandContext {
         return delegate.isPlayer();
     }
 
+    @SuppressWarnings("removal") // getUuid()/getPlayerRef() deprecated, but needed for Player -> PlayerRef lookup
     public PlayerHandle sender() {
         if (!delegate.isPlayer()) {
             return null;
@@ -38,12 +39,25 @@ public final class JsCommandContext {
         if (player == null) {
             return null;
         }
-        // Prefer PlayerRef (authoritative) when available.
-        if (player.getPlayerRef() != null) {
-            return playersApi.wrap(player.getPlayerRef());
+        
+        com.hypixel.hytale.server.core.universe.PlayerRef playerRef = null;
+        
+        // Try Universe lookup first (proper non-deprecated approach)
+        com.hypixel.hytale.server.core.universe.Universe universe = com.hypixel.hytale.server.core.universe.Universe.get();
+        if (universe != null) {
+            playerRef = universe.getPlayer(player.getUuid());
         }
-        // No PlayerRef available.
-        return null;
+        
+        // Fallback to deprecated method for test environments
+        if (playerRef == null) {
+            playerRef = player.getPlayerRef();
+        }
+        
+        if (playerRef == null) {
+            return null;
+        }
+        
+        return playersApi.wrap(playerRef);
     }
 
     public String[] args() {

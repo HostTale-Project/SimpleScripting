@@ -56,7 +56,7 @@ public final class ScriptBrowser {
                 String relative = toRelative(path);
                 if (Files.isDirectory(path)) {
                     folders.add(new ScriptEntry(name, relative, true));
-                } else if (name.endsWith(".js")) {
+                } else if (name.endsWith(".js") || name.endsWith(".json")) {
                     scripts.add(new ScriptEntry(name, relative, false));
                 }
             });
@@ -128,8 +128,9 @@ public final class ScriptBrowser {
 
     private Path resolveFile(String relativePath) {
         Path resolved = resolvePath(relativePath);
-        if (!resolved.getFileName().toString().endsWith(".js")) {
-            throw new IllegalArgumentException("Only .js files can be viewed or edited.");
+        String fileName = resolved.getFileName().toString();
+        if (!fileName.endsWith(".js") && !fileName.endsWith(".json")) {
+            throw new IllegalArgumentException("Only .js and .json files can be viewed or edited.");
         }
         return resolved;
     }

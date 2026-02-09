@@ -1,10 +1,17 @@
 package com.hosttale.simplescripting.mod.runtime.api.players;
 
 import com.hosttale.simplescripting.mod.runtime.api.entities.LivingEntityHandle;
+import com.hosttale.simplescripting.mod.runtime.api.inventory.ItemContainerHandle;
 import com.hosttale.simplescripting.mod.runtime.api.ui.UiMessageRenderer;
+import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.entity.entities.Player;
+import com.hypixel.hytale.server.core.inventory.Inventory;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.EventTitleUtil;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Scriptable;
 
 import java.util.Locale;
 import java.util.UUID;
@@ -24,11 +31,22 @@ public final class PlayerHandle extends LivingEntityHandle {
      * Create a new PlayerHandle wrapping the given PlayerRef.
      * 
      * @param playerRef The player reference from the server
-     * @throws IllegalArgumentException if playerRef is null
+     * @throws IllegalArgumentException if playerRef is null or has no entity reference
      */
     public PlayerHandle(PlayerRef playerRef) {
-        super(playerRef.getReference()); // Pass EntityRef to parent
+        super(validatePlayerRef(playerRef));
         this.playerRef = playerRef;
+    }
+    
+    private static Ref<EntityStore> validatePlayerRef(PlayerRef playerRef) {
+        if (playerRef == null) {
+            throw new IllegalArgumentException("PlayerRef cannot be null");
+        }
+        var entityRef = playerRef.getReference();
+        if (entityRef == null) {
+            throw new IllegalArgumentException("PlayerRef.getReference() returned null - player entity not yet created");
+        }
+        return entityRef;
     }
 
     /**
@@ -78,6 +96,41 @@ public final class PlayerHandle extends LivingEntityHandle {
      */
     public boolean isOnline() {
         return playerRef.isValid();
+    }
+
+    /**
+     * Get the player's inventory container (combined hotbar + storage).
+     * 
+     * <p>This overrides the base LivingEntityHandle.getInventory() to provide
+     * direct access to the player's combined inventory container.</p>
+     * 
+     * @return The inventory container handle, or null if player is invalid
+     */
+    @Override
+    public ItemContainerHandle getInventory() {
+        if (!isOnline()) {
+            return null;
+        }
+
+        try {
+            // Get Player component from the entity holder
+            Player player = playerRef.getComponent(Player.getComponentType());
+            if (player == null) {
+                return null;
+            }
+
+            Inventory inventory = player.getInventory();
+            if (inventory == null) {
+                return null;
+            }
+
+            // Return combined container (hotbar + storage) for convenient access
+            Scriptable scope = Context.getCurrentContext().initStandardObjects();
+            return new ItemContainerHandle(inventory.getCombinedHotbarFirst(), scope);
+        } catch (Exception e) {
+            // Log error and return null - don't expose internal errors to JavaScript
+            return null;
+        }
     }
 
     public void sendMessage(Object text) {

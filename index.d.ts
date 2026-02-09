@@ -6,6 +6,7 @@ interface ModManifest {
   version: string;
   entrypoint?: string;
   preload?: boolean;
+  enabled?: boolean;
   dependencies?: string[];
   requiredAssetPacks?: string[];
   permissions?: string[];
@@ -30,6 +31,48 @@ interface SharedServicesApi {
    * args can be a single value or an array of arguments.
    */
   call(serviceName: string, methodName: string, args?: any[] | any): any;
+}
+
+/**
+ * Extension Events API - interact with events from extension plugins.
+ * Extensions can emit custom events that JS mods can listen to.
+ * Example events:
+ *   - economy:ready (payload: provider name string)
+ *   - economy:balance-changed (payload: {playerUuid, amount, type})
+ */
+interface ExtensionEventsApi {
+  /**
+   * Listen to an extension event.
+   * @param eventName Event name to listen for (e.g., "economy:ready")
+   * @param handler Function to call when event fires
+   * @returns Handle ID for unregistering
+   */
+  on(eventName: string, handler: (payload: any) => void): string;
+
+  /**
+   * Emit an extension event.
+   * @param eventName Event name
+   * @param payload Optional event payload
+   */
+  emit(eventName: string, payload?: any): void;
+
+  /**
+   * Unregister an event listener.
+   * @param handleId Handle ID returned by on()
+   */
+  off(handleId: string): void;
+
+  /**
+   * Clear all event listeners registered by this mod.
+   */
+  clear(): void;
+
+  /**
+   * Check if an event has any listeners.
+   * @param eventName Event name to check
+   * @returns true if listeners are registered
+   */
+  hasListeners(eventName: string): boolean;
 }
 
 type DbValue = string | number | boolean | Uint8Array | number[] | null;
@@ -124,8 +167,8 @@ interface EntityHandle {
  * Extends EntityHandle to provide common entity functionality.
  */
 interface LivingEntityHandle extends EntityHandle {
-  /** Get the inventory of this living entity (Phase 1) */
-  getInventory(): any; // Will return InventoryHandle in Phase 1
+  /** Get the inventory of this living entity */
+  getInventory(): ItemContainerHandle | null;
   /** Check if this living entity has an inventory */
   hasInventory(): boolean;
 }
@@ -201,6 +244,13 @@ interface WorldsApi {
   getDefaultWorld(): WorldHandle | null;
   message(worldName: string, text: MessageLike): boolean;
   hasWorld(name: string): boolean;
+  /**
+   * Execute a callback on the world thread.
+   * Necessary for ECS operations (like ecs.getPosition) from scheduler threads.
+   * @param worldName The world name, or null for default world
+   * @param callback Function to execute on the world thread
+   */
+  runOnWorldThread(worldName: string | null, callback: () => void): void;
 }
 
 interface NetApi {
@@ -233,16 +283,6 @@ interface AssetsApi {
   info(message: string): void;
   warnUnsupported(): void;
 }
-
-interface EconomyApi {
-  isAvailable(): boolean;
-  balance(playerUuid: string): number;
-  deposit(playerUuid: string, amount: number): boolean;
-  withdraw(playerUuid: string, amount: number): boolean;
-  has(playerUuid: string, amount: number): boolean;
-  getName(): string;
-}
-
 
 // Core ECS types (opaque placeholders for typing)
 // 34 events organized by priority groups (matching EventCatalog.java)
@@ -427,10 +467,162 @@ interface EcsApi {
   damageInspectGroup(): any;
 }
 
+// === Inventory API ===
+
+/**
+ * Handle for Hytale ItemStack.
+ * Represents a stack of items with quantity, durability, and metadata.
+ * Most modification methods return NEW instances - the original is never modified.
+ */
+interface ItemStackHandle {
+  // Properties (read-only)
+  readonly itemId: string;
+  readonly quantity: number;
+  readonly durability: number;
+  readonly maxDurability: number;
+  readonly broken: boolean;
+  readonly unbreakable: boolean;
+  readonly empty: boolean;
+  readonly valid: boolean;
+  readonly blockKey: string | null;
+
+  // Metadata access
+  getMetadata(): Record<string, any> | null;
+  getMetadataValue(key: string): any;
+  hasMetadata(key?: string): boolean;
+
+  // Modification methods (return new instances)
+  withQuantity(quantity: number): ItemStackHandle | null;
+  withDurability(durability: number): ItemStackHandle;
+  withIncreasedDurability(delta: number): ItemStackHandle;
+  withMaxDurability(maxDurability: number): ItemStackHandle;
+  withRestoredDurability(durability: number): ItemStackHandle;
+  withMetadata(metadata: Record<string, any>): ItemStackHandle;
+  withMetadata(key: string, value: any): ItemStackHandle;
+
+  // Convenience methods
+  damage(amount: number): ItemStackHandle;
+  repair(amount: number): ItemStackHandle;
+  fullyRepair(): ItemStackHandle;
+
+  // Comparison
+  isStackableWith(other: ItemStackHandle): boolean;
+  isSameItemType(other: ItemStackHandle): boolean;
+  isEquivalentType(other: ItemStackHandle): boolean;
+
+  // Serialization
+  toObject(): {
+    itemId: string;
+    quantity: number;
+    durability: number;
+    maxDurability: number;
+    broken: boolean;
+    unbreakable: boolean;
+    empty: boolean;
+    valid: boolean;
+    blockKey?: string;
+    metadata?: Record<string, any>;
+  };
+  toString(): string;
+}
+
+/**
+ * Result of an inventory transaction operation.
+ * Indicates success/failure and provides details about the operation.
+ */
+interface TransactionResultHandle {
+  // Status
+  readonly success: boolean;
+  readonly message: string | null;
+
+  // Items involved
+  readonly remainder: ItemStackHandle | null;
+  readonly slotBefore: ItemStackHandle | null;
+  readonly slotAfter: ItemStackHandle | null;
+  readonly slot: number | null;
+
+  // String representation
+  toString(): string;
+}
+
+/**
+ * Handle for Hytale ItemContainer.
+ * Represents a collection of item slots (hotbar, storage, armor, etc.).
+ */
+interface ItemContainerHandle {
+  // Properties
+  readonly capacity: number;
+  readonly empty: boolean;
+
+  // Slot operations
+  getItem(slot: number): ItemStackHandle | null;
+  setItem(slot: number, item: ItemStackHandle | null): TransactionResultHandle;
+  addToSlot(slot: number, item: ItemStackHandle): TransactionResultHandle;
+  removeFromSlot(slot: number): ItemStackHandle | null;
+  removeFromSlot(slot: number, quantity: number): TransactionResultHandle;
+  clearSlot(slot: number): TransactionResultHandle;
+
+  // Container-wide operations
+  addItem(item: ItemStackHandle): TransactionResultHandle;
+  addItems(items: ItemStackHandle[]): TransactionResultHandle[];
+  canAddItems(items: ItemStackHandle[]): boolean;
+  removeItem(item: ItemStackHandle): TransactionResultHandle;
+  canRemoveItem(item: ItemStackHandle): boolean;
+  clear(): TransactionResultHandle;
+
+  // Searching and querying
+  count(predicate: (item: ItemStackHandle, slot: number) => boolean): number;
+  findSlot(predicate: (item: ItemStackHandle, slot: number) => boolean): number;
+  findSlots(predicate: (item: ItemStackHandle, slot: number) => boolean): number[];
+  containsStackable(item: ItemStackHandle): boolean;
+  contains(itemId: string, quantity?: number): boolean;
+  getQuantity(itemId: string): number;
+  has(itemId: string): boolean;
+
+  // Iteration methods
+  forEach(callback: (item: ItemStackHandle, slot: number) => void): void;
+  map<T>(callback: (item: ItemStackHandle, slot: number) => T): T[];
+  filter(predicate: (item: ItemStackHandle, slot: number) => boolean): ItemStackHandle[];
+  getAll(): ItemStackHandle[];
+  getAllSlots(): Record<number, ItemStackHandle>;
+
+  // String representation
+  toString(): string;
+}
+
+/**
+ * Options for creating an ItemStack.
+ */
+interface CreateStackOptions {
+  itemId: string;
+  quantity?: number;
+  durability?: number;
+  maxDurability?: number;
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Inventory API for creating and managing ItemStacks.
+ */
+interface InventoryApi {
+  // Factory methods
+  createStack(itemId: string): ItemStackHandle;
+  createStack(itemId: string, quantity: number): ItemStackHandle;
+  createStack(options: CreateStackOptions): ItemStackHandle;
+  emptyStack(): ItemStackHandle;
+
+  // Utility methods
+  isEmpty(stack: ItemStackHandle | null): boolean;
+  areStackable(a: ItemStackHandle | null, b: ItemStackHandle | null): boolean;
+  areSameType(a: ItemStackHandle | null, b: ItemStackHandle | null): boolean;
+}
+
 declare const modManifest: ModManifest;
 declare const console: ConsoleBridge;
 declare const log: ConsoleBridge;
 declare const SharedServices: SharedServicesApi;
+/** Extension event bus - listen to and emit events from extension plugins */
+declare const extensions: ExtensionEventsApi;
 declare const db: DatabaseApi;
 declare const storage: StorageApi;
 declare const server: ServerApi;
@@ -442,7 +634,7 @@ declare const net: NetApi;
 declare const ui: UiApi;
 declare const assets: AssetsApi;
 declare const ecs: EcsApi;
-declare const economy: EconomyApi;
+declare const inventory: InventoryApi;
 declare function require(path: string): any;
 
 /**

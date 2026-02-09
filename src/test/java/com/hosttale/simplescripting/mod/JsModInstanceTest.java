@@ -94,7 +94,8 @@ class JsModInstanceTest {
                 Set.of(),
                 null,
                 false,
-                List.of()
+                List.of(),
+                true
         );
         Files.writeString(modRoot.resolve("main.js"), script);
         return new JsModDefinition(modRoot, manifest);

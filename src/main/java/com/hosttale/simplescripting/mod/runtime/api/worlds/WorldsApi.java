@@ -3,7 +3,10 @@ package com.hosttale.simplescripting.mod.runtime.api.worlds;
 import com.hosttale.simplescripting.mod.runtime.api.common.ApiUtils;
 import com.hosttale.simplescripting.mod.runtime.api.players.PlayersApi;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.universe.Universe;
+import com.hypixel.hytale.server.core.universe.world.World;
 import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
 
 import java.util.Collections;
@@ -56,6 +59,44 @@ public final class WorldsApi {
 
     public boolean hasWorld(String name) {
         return get(name) != null;
+    }
+
+    /**
+     * Execute a callback on the world thread.
+     * This is necessary for ECS operations (like ecs.getPosition) from scheduler threads.
+     * 
+     * @param worldName The world name, or null for default world
+     * @param callback The JavaScript function to execute on the world thread
+     */
+    public void runOnWorldThread(String worldName, Function callback) {
+        Universe universe = Universe.get();
+        if (universe == null) {
+            logger.atWarning().log("Universe not ready");
+            return;
+        }
+        
+        World world;
+        if (worldName == null || worldName.isBlank()) {
+            world = universe.getDefaultWorld();
+        } else {
+            world = universe.getWorld(worldName);
+        }
+        
+        if (world == null) {
+            logger.atWarning().log("World not found: %s", worldName);
+            return;
+        }
+        
+        world.execute(() -> {
+            Context cx = Context.enter();
+            try {
+                callback.call(cx, runtime.getScope(), runtime.getScope(), new Object[]{});
+            } catch (Exception e) {
+                logger.atSevere().log("Error executing callback on world thread: %s", e.getMessage());
+            } finally {
+                Context.exit();
+            }
+        });
     }
 
     private Scriptable toJsArray(List<String> values) {

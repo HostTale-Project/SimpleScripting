@@ -23,20 +23,43 @@ public final class EventPayloads {
     private EventPayloads() {
     }
 
+    @SuppressWarnings("removal") // getUuid() deprecated, no alternative for Player -> PlayerRef lookup
     public static Object adapt(Object event) {
         // Player events
         if (event instanceof PlayerChatEvent chat) {
             return new PlayerChat(chat);
         }
         if (event instanceof PlayerConnectEvent connect) {
-            return new PlayerRefPayload("playerConnect", connect.getPlayerRef());
+            com.hypixel.hytale.server.core.universe.PlayerRef playerRef = connect.getPlayerRef();
+            if (playerRef == null) {
+                throw new IllegalStateException("PlayerConnectEvent.getPlayerRef() returned null");
+            }
+            return new PlayerRefPayload("playerConnect", playerRef);
         }
         if (event instanceof PlayerDisconnectEvent disconnect) {
-            return new PlayerRefPayload("playerDisconnect", disconnect.getPlayerRef());
+            com.hypixel.hytale.server.core.universe.PlayerRef playerRef = disconnect.getPlayerRef();
+            if (playerRef == null) {
+                throw new IllegalStateException("PlayerDisconnectEvent.getPlayerRef() returned null");
+            }
+            return new PlayerRefPayload("playerDisconnect", playerRef);
         }
         if (event instanceof PlayerReadyEvent ready) {
             var player = ready.getPlayer();
-            var ref = player == null ? null : player.getPlayerRef();
+            com.hypixel.hytale.server.core.universe.PlayerRef ref = null;
+            
+            if (player != null) {
+                // Try Universe lookup first (proper non-deprecated approach)
+                com.hypixel.hytale.server.core.universe.Universe universe = com.hypixel.hytale.server.core.universe.Universe.get();
+                if (universe != null) {
+                    ref = universe.getPlayer(player.getUuid());
+                }
+                
+                // Fallback to deprecated method for test environments
+                if (ref == null) {
+                    ref = player.getPlayerRef();
+                }
+            }
+            
             return new PlayerRefPayload("playerReady", ref);
         }
         

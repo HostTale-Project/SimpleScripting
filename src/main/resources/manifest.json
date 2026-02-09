@@ -10,13 +10,6 @@
     ],
     "Website": "wiki.hosttale.com",
     "ServerVersion": "*",
-    "Dependencies": {
-        "Hytale:EntityModule": "*"
-    },
-    "OptionalDependencies": {
-        "TheNewEconomy:VaultUnlocked": "*",
-        "com.eliteessentials:EliteEssentials": "*"
-    },
     "DisabledByDefault": false,
     "Main": "com.hosttale.simplescripting.SimpleScriptingPlugin",
     "IncludesAssetPack": true
