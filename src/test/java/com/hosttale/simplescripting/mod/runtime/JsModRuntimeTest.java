@@ -108,7 +108,8 @@ class JsModRuntimeTest {
                 Set.of(),
                 null,
                 false,
-                List.of()
+                List.of(),
+                true
         );
 
         JsModDefinition definition = new JsModDefinition(modRoot, manifest);

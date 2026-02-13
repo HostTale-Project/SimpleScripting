@@ -5,9 +5,9 @@ import com.hosttale.simplescripting.mod.SharedServiceRegistry;
 import com.hosttale.simplescripting.mod.runtime.api.assets.AssetsApi;
 import com.hosttale.simplescripting.mod.runtime.api.commands.CommandsApi;
 import com.hosttale.simplescripting.mod.runtime.api.database.DatabaseApi;
-import com.hosttale.simplescripting.mod.runtime.api.economy.EconomyApi;
 import com.hosttale.simplescripting.mod.runtime.api.events.EventCatalog;
 import com.hosttale.simplescripting.mod.runtime.api.events.EventsApi;
+import com.hosttale.simplescripting.mod.runtime.api.inventory.InventoryApi;
 import com.hosttale.simplescripting.mod.runtime.api.modules.ModuleImports;
 import com.hosttale.simplescripting.mod.runtime.api.net.NetApi;
 import com.hosttale.simplescripting.mod.runtime.api.players.PlayersApi;
@@ -119,7 +119,23 @@ public final class JsModRuntime implements AutoCloseable {
         defineConstant("ecs", Context.javaToJS(new EcsApi(logger, registrationTracker, this), scope));
         defineConstant("assets", Context.javaToJS(new AssetsApi(logger), scope));
         defineConstant("ui", Context.javaToJS(new UiApi(), scope));
-        defineConstant("economy", Context.javaToJS(new EconomyApi(logger), scope));
+        
+        // Inject extension event bus API
+        if (pluginServices.getExtensionRegistry() != null) {
+            defineConstant("extensions", Context.javaToJS(
+                    new com.hosttale.simplescripting.extension.ExtensionEventsApi(
+                            pluginServices.getExtensionRegistry().getEventBus(),
+                            this,
+                            registrationTracker,
+                            logger
+                    ),
+                    scope));
+            
+            // Inject APIs registered by extensions (e.g., economy)
+            pluginServices.getExtensionRegistry().injectApisIntoMod(this, scope);
+        }
+        
+        defineConstant("inventory", Context.javaToJS(new InventoryApi(scope), scope));
         databaseApi = new DatabaseApi(modId, this, logger);
         defineConstant("db", Context.javaToJS(databaseApi, scope));
         ScriptableObject storage = (ScriptableObject) context.newObject(scope);
@@ -131,7 +147,7 @@ public final class JsModRuntime implements AutoCloseable {
         defineConstant("require", new ModuleImports.RequireFunction(moduleImports));
     }
 
-    private void defineConstant(String name, Object value) {
+    public void defineConstant(String name, Object value) {
         ScriptableObject.defineProperty(scope, name, value,
                 ScriptableObject.DONTENUM | ScriptableObject.PERMANENT | ScriptableObject.READONLY);
     }
@@ -193,6 +209,10 @@ public final class JsModRuntime implements AutoCloseable {
 
     public boolean isLoaded() {
         return loaded;
+    }
+
+    public JsModDefinition getDefinition() {
+        return definition;
     }
 
     public HytaleLogger getLogger() {

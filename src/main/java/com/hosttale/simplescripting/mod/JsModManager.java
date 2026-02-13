@@ -103,6 +103,13 @@ public final class JsModManager {
         }
 
         JsModManifest manifest = manifestOpt.get();
+        
+        // Skip disabled mods
+        if (!manifest.isEnabled()) {
+            logger.atInfo().log("Skipping %s (disabled in manifest).", modDir.getFileName());
+            return Optional.empty();
+        }
+        
         List<String> errors = JsModManifestValidator.validate(manifestPath, manifest);
         if (!errors.isEmpty()) {
             logger.atWarning().log("Rejected mod at %s: %s", modDir.getFileName(), String.join("; ", errors));

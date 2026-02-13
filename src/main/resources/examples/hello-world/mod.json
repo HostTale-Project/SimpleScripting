@@ -1,9 +1,0 @@
-{
-  "id": "hello-world",
-  "name": "Hello World",
-  "version": "1.0.0",
-  "entrypoint": "main.js",
-  "requiredAssetPacks": [],
-  "permissions": [],
-  "description": "Example JS mod that logs lifecycle events."
-}

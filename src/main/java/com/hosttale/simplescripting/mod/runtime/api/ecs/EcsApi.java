@@ -471,7 +471,7 @@ public final class EcsApi {
         SystemGroup<EntityStore> group = extractGroup(options);
 
         JsEntityTickingSystem system = new JsEntityTickingSystem(name, query, tickFn, parallel, group, runtime);
-        registry().registerSystem(system, true);
+        registry().registerSystem(system);
         incrementSystemRef(system.getClass());
         registrationTracker.trackRegistration(() -> unregisterSystemIfLast(system.getClass()));
         return system;
@@ -487,7 +487,7 @@ public final class EcsApi {
         String name = getString(options, "name", "js-ref-system");
 
         JsRefSystem system = new JsRefSystem(name, query, onAdd, onRemove, runtime);
-        registry().registerSystem(system, true);
+        registry().registerSystem(system);
         incrementSystemRef(system.getClass());
         registrationTracker.trackRegistration(() -> unregisterSystemIfLast(system.getClass()));
         return system;
@@ -504,7 +504,7 @@ public final class EcsApi {
         String name = getString(options, "name", "js-refchange-system");
 
         JsRefChangeSystem system = new JsRefChangeSystem(name, componentType, onAdded, onSet, onRemoved, runtime);
-        registry().registerSystem(system, true);
+        registry().registerSystem(system);
         incrementSystemRef(system.getClass());
         registrationTracker.trackRegistration(() -> unregisterSystemIfLast(system.getClass()));
         return system;
@@ -519,7 +519,7 @@ public final class EcsApi {
         SystemGroup<EntityStore> group = extractGroup(options);
 
         JsTickableSystem system = new JsTickableSystem(name, tickFn, runtime, logger, group);
-        registry().registerSystem(system, true);
+        registry().registerSystem(system);
         incrementSystemRef(system.getClass());
         registrationTracker.trackRegistration(() -> unregisterSystemIfLast(system.getClass()));
         return system;
@@ -532,7 +532,7 @@ public final class EcsApi {
         SystemGroup<EntityStore> group = extractGroup(options);
 
         JsRunWhenPausedSystem system = new JsRunWhenPausedSystem(name, tickFn, runtime, logger, group);
-        registry().registerSystem(system, true);
+        registry().registerSystem(system);
         incrementSystemRef(system.getClass());
         registrationTracker.trackRegistration(() -> unregisterSystemIfLast(system.getClass()));
         return system;
@@ -558,7 +558,7 @@ public final class EcsApi {
         ensureEntityEventType(eventClass);
 
         JsEntityEventSystem system = new JsEntityEventSystem(name, eventClass, query, handler, runtime, logger);
-        registry().registerSystem(system, true);
+        registry().registerSystem(system);
         incrementSystemRef(system.getClass());
         registrationTracker.trackRegistration(() -> unregisterSystemIfLast(system.getClass()));
         return system;
@@ -573,7 +573,7 @@ public final class EcsApi {
         ensureWorldEventType(eventClass);
 
         JsWorldEventSystem system = new JsWorldEventSystem(name, eventClass, handler, runtime, logger);
-        registry().registerSystem(system, true);
+        registry().registerSystem(system);
         incrementSystemRef(system.getClass());
         registrationTracker.trackRegistration(() -> unregisterSystemIfLast(system.getClass()));
         return system;

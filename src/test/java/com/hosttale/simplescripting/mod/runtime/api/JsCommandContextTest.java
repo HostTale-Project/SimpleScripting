@@ -2,11 +2,13 @@ package com.hosttale.simplescripting.mod.runtime.api;
 
 import com.hosttale.simplescripting.mod.runtime.api.commands.JsCommandContext;
 import com.hosttale.simplescripting.mod.runtime.api.players.PlayersApi;
+import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.CommandSender;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,8 +21,14 @@ class JsCommandContextTest {
 
     @Test
     void senderNamePrefersPlayerUsername() {
+        // Mock EntityRef for PlayerHandle
+        @SuppressWarnings("unchecked")
+        Ref<EntityStore> mockEntityRef = mock(Ref.class);
+        when(mockEntityRef.isValid()).thenReturn(true);
+        
         PlayerRef ref = mock(PlayerRef.class);
         when(ref.getUsername()).thenReturn("invboy");
+        when(ref.getReference()).thenReturn(mockEntityRef);
 
         Player player = mock(Player.class);
         when(player.getPlayerRef()).thenReturn(ref);
@@ -50,8 +58,14 @@ class JsCommandContextTest {
 
     @Test
     void senderNameFallsBackToDisplayNameWhenUsernameMissing() {
+        // Mock EntityRef for PlayerHandle
+        @SuppressWarnings("unchecked")
+        Ref<EntityStore> mockEntityRef = mock(Ref.class);
+        when(mockEntityRef.isValid()).thenReturn(true);
+        
         PlayerRef ref = mock(PlayerRef.class);
         when(ref.getUsername()).thenReturn(null);
+        when(ref.getReference()).thenReturn(mockEntityRef);
 
         Player player = mock(Player.class);
         when(player.getPlayerRef()).thenReturn(ref);

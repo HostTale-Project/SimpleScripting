@@ -1,0 +1,10 @@
+{
+  "id": "welcome-rewards",
+  "name": "Welcome Rewards",
+  "version": "1.0.0",
+  "entrypoint": "main.js",
+  "enabled": false,
+  "requiredAssetPacks": [],
+  "permissions": [],
+  "description": "Welcome system with first-join rewards, join/leave announcements, and playtime tracking."
+}

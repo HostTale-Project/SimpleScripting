@@ -18,6 +18,7 @@ public final class JsModManifest {
     private final String description;
     private final boolean preload;
     private final List<String> dependencies;
+    private final boolean enabled;
 
     @JsonCreator
     public JsModManifest(
@@ -29,7 +30,8 @@ public final class JsModManifest {
             @JsonProperty("permissions") Set<String> permissions,
             @JsonProperty("description") String description,
             @JsonProperty("preload") Boolean preload,
-            @JsonProperty("dependencies") List<String> dependencies
+            @JsonProperty("dependencies") List<String> dependencies,
+            @JsonProperty("enabled") Boolean enabled
     ) {
         this.id = id;
         this.name = name;
@@ -40,6 +42,7 @@ public final class JsModManifest {
         this.description = description;
         this.preload = preload != null && preload;
         this.dependencies = dependencies == null ? Collections.emptyList() : List.copyOf(dependencies);
+        this.enabled = enabled == null || enabled;
     }
 
     public String getId() {
@@ -76,5 +79,9 @@ public final class JsModManifest {
 
     public List<String> getDependencies() {
         return dependencies;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
     }
 }

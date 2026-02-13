@@ -61,7 +61,8 @@ class JsModManifestValidatorTest {
                 Set.of(),
                 null,
                 false,
-                List.of("test-id")
+                List.of("test-id"),
+                true
         );
 
         List<String> errors = validate(manifest);
@@ -85,7 +86,8 @@ class JsModManifestValidatorTest {
                 Set.of(),
                 null,
                 false,
-                List.of()
+                List.of(),
+                true
         );
     }
 }

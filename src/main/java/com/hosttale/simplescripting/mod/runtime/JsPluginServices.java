@@ -1,5 +1,6 @@
 package com.hosttale.simplescripting.mod.runtime;
 
+import com.hosttale.simplescripting.extension.ExtensionRegistry;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.command.system.CommandRegistry;
 import com.hypixel.hytale.server.core.plugin.PluginBase;
@@ -17,6 +18,7 @@ public final class JsPluginServices {
     private final TaskRegistry taskRegistry;
     private final AssetRegistry assetRegistry;
     private final HytaleLogger logger;
+    private ExtensionRegistry extensionRegistry;
 
     private JsPluginServices(
             CommandRegistry commandRegistry,
@@ -68,5 +70,13 @@ public final class JsPluginServices {
 
     public HytaleLogger getLogger() {
         return logger;
+    }
+
+    public ExtensionRegistry getExtensionRegistry() {
+        return extensionRegistry;
+    }
+
+    public void setExtensionRegistry(ExtensionRegistry extensionRegistry) {
+        this.extensionRegistry = extensionRegistry;
     }
 }

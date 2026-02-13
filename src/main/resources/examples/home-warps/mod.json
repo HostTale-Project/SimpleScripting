@@ -1,0 +1,10 @@
+{
+  "id": "home-warps",
+  "name": "Home & Warps",
+  "version": "1.0.0",
+  "entrypoint": "main.js",
+  "enabled": false,
+  "requiredAssetPacks": [],
+  "permissions": [],
+  "description": "Teleportation system with player homes and server warps. Set up to 3 homes per player."
+}

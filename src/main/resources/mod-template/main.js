@@ -2,7 +2,7 @@
 
 function onEnable() {
   log.info("__MOD_NAME__ enabled");
-  events.on("Boot", function() {
+  events.on("boot", function() {
     log.info("__MOD_NAME__ saw server boot");
   });
 }

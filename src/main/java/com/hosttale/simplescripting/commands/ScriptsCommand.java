@@ -21,6 +21,7 @@ public final class ScriptsCommand extends CommandBase {
     }
 
     @Override
+    @SuppressWarnings("removal") // TODO: Replace getPlayerRef() when Hytale provides alternative API
     protected void executeSync(CommandContext commandContext) {
         if (!commandContext.isPlayer()) {
             commandContext.sendMessage(Message.raw("This command can only be used by players."));
@@ -45,7 +46,20 @@ public final class ScriptsCommand extends CommandBase {
             return;
         }
 
-        PlayerRef playerRef = player.getPlayerRef();
+        @SuppressWarnings("removal") // getUuid()/getPlayerRef() deprecated, but needed for Player -> PlayerRef lookup
+        PlayerRef playerRef = null;
+        
+        // Try Universe lookup first (proper non-deprecated approach)
+        com.hypixel.hytale.server.core.universe.Universe universe = com.hypixel.hytale.server.core.universe.Universe.get();
+        if (universe != null) {
+            playerRef = universe.getPlayer(player.getUuid());
+        }
+        
+        // Fallback to deprecated method for test environments
+        if (playerRef == null) {
+            playerRef = player.getPlayerRef();
+        }
+        
         if (playerRef == null || !playerRef.isValid()) {
             commandContext.sendMessage(Message.raw("Unable to open scripts UI right now."));
             return;

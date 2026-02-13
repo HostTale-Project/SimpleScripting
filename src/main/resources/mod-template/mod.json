@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "entrypoint": "main.js",
   "preload": false,
+  "enabled": true,
   "dependencies": [],
   "requiredAssetPacks": [],
   "permissions": [],

@@ -63,11 +63,6 @@ repositories {
         name = 'jitpack'
         url = uri('https://jitpack.io')
     }
-    
-    maven {
-        name = 'codemc'
-        url = uri('https://repo.codemc.io/repository/creatorfromhell/')
-    }
 }
 
 // ===== Dependencies =====
